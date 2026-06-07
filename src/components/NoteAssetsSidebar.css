@@ -1,0 +1,234 @@
+.note-assets-sidebar {
+  width: var(--assets-sidebar-width, 280px);
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-left: 1px solid var(--border);
+  background: var(--bg-surface);
+}
+
+.note-assets-sidebar--global {
+  z-index: 20;
+  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.12);
+}
+
+.global-assets-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px 10px;
+  flex-shrink: 0;
+}
+
+.global-assets-search-icon {
+  flex-shrink: 0;
+  color: var(--text-muted);
+}
+
+.global-assets-search-input {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 10px;
+  font-size: 13px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  outline: none;
+}
+
+.global-assets-search-input:focus {
+  border-color: var(--border-focus);
+}
+
+.note-assets-filter-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px 10px;
+  flex-shrink: 0;
+}
+
+.note-assets-filter-label {
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.note-assets-file-kind-select {
+  flex: 1;
+  min-width: 0;
+}
+
+.note-assets-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.note-assets-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.note-assets-close {
+  padding: 6px;
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+}
+
+.note-assets-close:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.note-assets-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 12px 12px 8px;
+  flex-shrink: 0;
+}
+
+.note-assets-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 10px;
+  font-size: 12px;
+  border-radius: 999px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.note-assets-filter:hover {
+  background: var(--bg-hover);
+}
+
+.note-assets-filter.active {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.note-assets-filter-count {
+  min-width: 18px;
+  padding: 0 5px;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.note-assets-filter.active .note-assets-filter-count {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.note-assets-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 10px 16px;
+}
+
+.note-assets-empty {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  padding: 12px 6px;
+}
+
+.note-assets-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 10px;
+  margin-bottom: 4px;
+  text-align: left;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+}
+
+.note-assets-item:hover {
+  background: var(--bg-hover);
+  border-color: var(--border);
+}
+
+.note-assets-item-icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--text-muted);
+}
+
+.note-assets-item--image .note-assets-item-icon {
+  color: #2563eb;
+}
+
+.note-assets-item--file .note-assets-item-icon {
+  color: #e11d48;
+}
+
+.note-assets-item--link .note-assets-item-icon {
+  color: var(--accent);
+}
+
+.note-assets-item-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.note-assets-item-title {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--editor-text, var(--text-primary));
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.note-assets-item-sub {
+  display: block;
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.note-assets-item-actions {
+  display: flex;
+  gap: 2px;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 0.12s;
+}
+
+.note-assets-item:hover .note-assets-item-actions,
+.note-assets-item:focus-within .note-assets-item-actions {
+  opacity: 1;
+}
+
+.note-assets-item-action {
+  display: flex;
+  padding: 4px;
+  border-radius: var(--radius-md);
+  color: var(--text-muted);
+}
+
+.note-assets-item-action:hover {
+  background: var(--bg-elevated);
+  color: var(--accent);
+}

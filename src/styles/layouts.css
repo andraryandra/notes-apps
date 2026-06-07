@@ -1,0 +1,74 @@
+/* Mode tampilan (layout) */
+
+[data-layout='wide'] {
+  --sidebar-width: 220px;
+  --list-width: 232px;
+}
+
+[data-layout='compact'] {
+  --sidebar-width: 228px;
+  --list-width: 248px;
+  --radius-md: 8px;
+  --radius-lg: 11px;
+}
+
+[data-layout='compact'] .note-list-header {
+  padding: 10px 12px 8px;
+}
+
+[data-layout='compact'] .note-list-header h2 {
+  font-size: 14px;
+}
+
+[data-layout='compact'] .sidebar-nav .nav-item {
+  padding: 8px 10px;
+  font-size: 13px;
+}
+
+[data-layout='compact'] .editor-toolbar {
+  padding: 8px 14px;
+}
+
+[data-layout='compact'] .editor-content-wrap {
+  padding: 14px 20px 24px;
+}
+
+[data-layout='compact'] .note-title-input {
+  font-size: 24px;
+}
+
+.app-body {
+  position: relative;
+  flex: 1;
+  display: flex;
+  min-height: 0;
+}
+
+/* Saat scroll daftar catatan: jangan repaint editor TipTap (berat di layar besar) */
+.app-body.is-list-scrolling .note-editor-wrap {
+  content-visibility: hidden;
+  contain: layout paint;
+}
+
+.app.is-settings-open .app-body {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.note-list-drawer-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 25;
+  background: rgba(0, 0, 0, 0.35);
+  border: none;
+  cursor: default;
+}
+
+.note-list-panel.note-list-drawer {
+  position: absolute;
+  left: var(--sidebar-width);
+  top: 0;
+  bottom: 0;
+  z-index: 30;
+  box-shadow: 8px 0 32px rgba(0, 0, 0, 0.25);
+}

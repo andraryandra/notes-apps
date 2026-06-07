@@ -1,0 +1,58 @@
+.note-meta-tokens {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+}
+
+/* Token meta — beda dari tag: ikon, dashed border, sudut lebih kotak, uppercase */
+.note-meta-token {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  max-width: 200px;
+  padding: 3px 8px 3px 6px;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-radius: 5px;
+  line-height: 1.2;
+}
+
+.note-meta-tokens--md .note-meta-token {
+  font-size: 10px;
+  padding: 4px 10px 4px 7px;
+  border-radius: 6px;
+  max-width: 240px;
+}
+
+.note-meta-token-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.note-meta-token svg {
+  flex-shrink: 0;
+}
+
+.note-meta-token--schedule {
+  color: #0369a1;
+  background: color-mix(in srgb, #0ea5e9 14%, var(--bg-surface));
+  border: 1px dashed color-mix(in srgb, #0284c7 55%, var(--border));
+}
+
+.note-meta-token--todo {
+  color: #b45309;
+  background: color-mix(in srgb, #f59e0b 14%, var(--bg-surface));
+  border: 1px dashed color-mix(in srgb, #d97706 55%, var(--border));
+}
+
+.note-meta-token--schedule svg {
+  color: #0284c7;
+}
+
+.note-meta-token--todo svg {
+  color: #d97706;
+}

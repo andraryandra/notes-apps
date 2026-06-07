@@ -1,0 +1,151 @@
+.kanban-tree {
+  padding: 8px 12px 16px;
+  border-top: 1px solid var(--border);
+}
+
+.kanban-tree-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.kanban-tree-add {
+  margin-left: auto;
+  padding: 4px;
+  color: var(--text-muted);
+  border-radius: var(--radius-sm);
+}
+
+.kanban-tree-add:hover {
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.kanban-tree-empty {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.45;
+  padding: 4px 4px 8px;
+}
+
+.kanban-tree-list {
+  list-style: none;
+}
+
+.kanban-tree-group {
+  margin-bottom: 4px;
+}
+
+.kanban-tree-group-row {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  border-radius: var(--radius-md);
+}
+
+.kanban-tree-group-row.active {
+  background: var(--accent-soft);
+}
+
+.kanban-tree-expand {
+  padding: 6px 4px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.kanban-tree-group-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 6px;
+  text-align: left;
+  min-width: 0;
+}
+
+.kanban-tree-group-name {
+  font-size: 13px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.kanban-tree-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 10px;
+  background: var(--bg-hover);
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.kanban-tree-group-row.active .kanban-tree-badge {
+  background: var(--accent);
+  color: white;
+}
+
+.kanban-tree-delete {
+  padding: 6px;
+  color: var(--text-muted);
+  opacity: 0;
+  flex-shrink: 0;
+}
+
+.kanban-tree-group-row:hover .kanban-tree-delete {
+  opacity: 1;
+}
+
+.kanban-tree-delete:hover {
+  color: var(--danger);
+}
+
+.kanban-tree-cards {
+  list-style: none;
+  margin: 2px 0 6px 22px;
+  padding-left: 8px;
+  border-left: 2px solid var(--border);
+}
+
+.kanban-tree-card-empty {
+  font-size: 11px;
+  color: var(--text-muted);
+  padding: 6px 8px;
+}
+
+.kanban-tree-card-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  font-size: 12px;
+  text-align: left;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+}
+
+.kanban-tree-card-btn span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.kanban-tree-card-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.kanban-tree-card-btn.active {
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 600;
+}

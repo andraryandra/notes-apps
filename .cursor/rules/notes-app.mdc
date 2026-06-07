@@ -1,0 +1,19 @@
+---
+description: Konteks proyek Notes Electron — arahkan agent ke dokumentasi produk
+alwaysApply: true
+---
+
+# Notes App
+
+Proyek ini adalah aplikasi catatan **Electron + React + TipTap**.
+
+Sebelum mengubah kode:
+
+1. Baca [AGENTS.md](../../AGENTS.md) untuk menentukan dokumen mana yang relevan.
+2. Ikuti [docs/06-TASK-GUIDE.md](../../docs/06-TASK-GUIDE.md) untuk membatasi file yang diedit.
+3. Jangan duplikasi interface — gunakan `src/types.ts`.
+4. Semua mutasi data lewat `useNotesStore`; persist via `window.electronAPI.saveData` → SQLite.
+5. Perubahan skema DB → [docs/09-DB-MIGRATIONS.md](../../docs/09-DB-MIGRATIONS.md) saja.
+6. Teks UI dalam Bahasa Indonesia.
+
+Untuk tugas besar, gunakan skill `.cursor/skills/notes-app/SKILL.md`.

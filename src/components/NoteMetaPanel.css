@@ -1,0 +1,350 @@
+.note-meta-panel {
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-surface);
+  padding: 8px 24px;
+}
+
+.note-meta-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  max-width: 480px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-elevated);
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+}
+
+.note-meta-toggle:hover {
+  border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.note-meta-toggle.is-open {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+  color: var(--text-primary);
+}
+
+.note-meta-toggle-icon {
+  flex-shrink: 0;
+  color: var(--accent);
+}
+
+.note-meta-toggle-label {
+  flex-shrink: 0;
+}
+
+.note-meta-toggle-trailing {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  justify-content: flex-start;
+}
+
+.note-meta-toggle-summary {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--accent);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.note-meta-toggle-summary.is-muted {
+  color: var(--text-muted);
+}
+
+.note-meta-toggle-chevron {
+  flex-shrink: 0;
+  color: var(--text-muted);
+  transition: transform 0.2s ease;
+}
+
+.note-meta-toggle.is-open .note-meta-toggle-chevron {
+  transform: rotate(180deg);
+  color: var(--accent);
+}
+
+/* Popover (portal) */
+.note-meta-popover {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--bg-elevated);
+  box-shadow: var(--shadow), 0 16px 48px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  animation: note-meta-popover-in 0.15s ease-out;
+}
+
+@keyframes note-meta-popover-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.note-meta-popover-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 8px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-surface);
+  flex-shrink: 0;
+}
+
+.note-meta-popover-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 8px 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  border-radius: var(--radius-sm);
+  transition: background 0.12s, color 0.12s;
+}
+
+.note-meta-popover-tab:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.note-meta-popover-tab.is-active {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.note-meta-popover-tab-badge {
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  font-weight: 700;
+  border-radius: 999px;
+  background: var(--accent);
+  color: white;
+}
+
+.note-meta-popover-tab:not(.is-active) .note-meta-popover-tab-badge {
+  background: var(--bg-hover);
+  color: var(--text-muted);
+}
+
+.note-meta-popover-body {
+  padding: 14px;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.note-meta-input {
+  width: 100%;
+  padding: 8px 10px;
+  font-size: 13px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+  outline: none;
+}
+
+.note-meta-input--full {
+  max-width: none;
+}
+
+.note-meta-input:focus {
+  border-color: var(--border-focus);
+}
+
+.note-meta-clear {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.note-meta-clear:hover {
+  color: var(--danger);
+}
+
+.note-meta-link-btn {
+  flex-shrink: 0;
+  padding: 6px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent);
+  border-radius: var(--radius-sm);
+}
+
+.note-meta-link-btn:hover {
+  background: var(--accent-soft);
+}
+
+.note-meta-kanban-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.note-meta-tag-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.note-meta-tag-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  background: var(--bg-surface);
+  transition: border-color 0.12s, background 0.12s, color 0.12s;
+}
+
+.note-meta-tag-btn:hover {
+  border-color: var(--text-muted);
+  background: var(--bg-hover);
+}
+
+.note-meta-tag-btn.is-active {
+  font-weight: 700;
+}
+
+.note-meta-tag-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.note-meta-tag-active {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--border);
+}
+
+.note-meta-hint {
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+}
+
+.note-meta-hint--flush {
+  margin-bottom: 0;
+  flex: 1;
+}
+
+.note-meta-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+
+.note-meta-group-select {
+  margin-bottom: 10px;
+}
+
+.note-meta-todo-item-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-width: 0;
+}
+
+.note-meta-todo-item-sub {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.note-meta-tag-create {
+  margin-bottom: 12px;
+}
+
+.note-meta-todo-add {
+  display: flex;
+  gap: 8px;
+  max-width: 100%;
+  margin-top: 4px;
+}
+
+.note-meta-add-btn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent);
+  color: white;
+  border-radius: var(--radius-md);
+  flex-shrink: 0;
+}
+
+.note-meta-add-btn:disabled {
+  opacity: 0.45;
+}
+
+.note-meta-empty {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.note-meta-todo-list {
+  list-style: none;
+  margin-top: 8px;
+  max-width: 100%;
+}
+
+.note-meta-todo-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  margin-bottom: 4px;
+  text-align: left;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+}
+
+.note-meta-todo-item:hover {
+  background: var(--bg-hover);
+}
+
+.note-meta-todo-item svg {
+  flex-shrink: 0;
+  color: var(--accent);
+}

@@ -1,0 +1,180 @@
+/* Wrapper flex: geser seluruh blok (gambar + keterangan) kiri/tengah/kanan */
+.note-image-wrapper {
+  margin: 1em 0;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  position: relative;
+}
+
+.note-image-wrapper.align-left {
+  align-items: flex-start;
+}
+
+.note-image-wrapper.align-center {
+  align-items: center;
+}
+
+.note-image-wrapper.align-right {
+  align-items: flex-end;
+}
+
+.note-image-block {
+  display: flex;
+  flex-direction: column;
+  max-width: 100%;
+  width: max-content;
+}
+
+.note-image-wrapper.is-selected .note-image-inner {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+  border-radius: var(--radius-md);
+}
+
+.note-image-inner {
+  position: relative;
+  display: block;
+  max-width: 100%;
+}
+
+.note-image-inner img {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow);
+  margin: 0;
+}
+
+.note-image-clickable {
+  cursor: zoom-in;
+}
+
+.note-image-zoom-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  background: rgba(10, 10, 13, 0.75);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  opacity: 0;
+  transition: opacity 0.15s;
+  z-index: 2;
+}
+
+.note-image-inner:hover .note-image-zoom-btn {
+  opacity: 1;
+}
+
+.note-image-zoom-btn:hover {
+  background: var(--accent);
+}
+
+.note-image-size-bar {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 4px 6px;
+  max-width: calc(100% - 16px);
+  background: rgba(10, 10, 13, 0.92);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow);
+  z-index: 2;
+}
+
+.note-image-align-group {
+  display: flex;
+  gap: 2px;
+}
+
+.note-image-size-divider {
+  width: 1px;
+  height: 20px;
+  background: var(--border);
+  margin: 0 2px;
+}
+
+.note-image-size-bar button {
+  padding: 4px 8px;
+  font-size: 11px;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  background: var(--bg-elevated);
+  border: 1px solid transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.note-image-size-bar button:hover {
+  color: var(--text-primary);
+  background: var(--bg-hover);
+}
+
+.note-image-size-bar button.active {
+  background: var(--accent-soft);
+  color: var(--accent-hover);
+  border-color: var(--accent);
+}
+
+.note-image-delete {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 6px !important;
+  color: var(--danger) !important;
+}
+
+.note-image-delete:hover {
+  background: rgba(239, 68, 68, 0.15) !important;
+}
+
+.note-image-caption {
+  display: block;
+  width: 100%;
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  outline: none;
+  min-height: 1.4em;
+  box-sizing: border-box;
+}
+
+/* Teks keterangan mengikuti posisi blok */
+.note-image-wrapper.align-left .note-image-caption {
+  text-align: left;
+}
+
+.note-image-wrapper.align-center .note-image-caption {
+  text-align: center;
+}
+
+.note-image-wrapper.align-right .note-image-caption {
+  text-align: right;
+}
+
+.note-image-caption:empty::before {
+  content: attr(data-placeholder);
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.note-image-caption:focus {
+  color: var(--text-primary);
+}

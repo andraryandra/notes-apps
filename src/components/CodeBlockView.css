@@ -1,0 +1,167 @@
+.note-code-block-wrapper {
+  margin: 1em 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-elevated);
+  overflow: hidden;
+}
+
+.note-code-block-wrapper.is-selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent-soft);
+}
+
+.note-code-block-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.note-code-block-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.note-code-block-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.note-code-block-below {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  font-size: 11px;
+  color: var(--accent-hover);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.note-code-block-below:hover {
+  background: var(--accent-soft);
+}
+
+.note-code-block-copy {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  font-size: 11px;
+  color: var(--text-secondary);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.note-code-block-copy:hover {
+  background: var(--accent-soft);
+  color: var(--accent-hover);
+}
+
+.note-code-block-delete {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  font-size: 11px;
+  color: var(--danger);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.note-code-block-delete:hover {
+  background: rgba(239, 68, 68, 0.12);
+}
+
+.note-code-pre {
+  margin: 0;
+  padding: 14px 16px;
+  overflow-x: auto;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 13px;
+  line-height: 1.55;
+  background: transparent;
+  border: none;
+  position: relative;
+}
+
+.note-code-block-wrapper:not(.json-theme) .note-code-pre code {
+  display: block;
+  color: var(--text-primary);
+  background: none;
+  padding: 0;
+  white-space: pre;
+}
+
+/* JSON — tema + layer highlight di belakang teks editable */
+.note-code-block-wrapper.json-theme .note-code-pre {
+  background: var(--code-bg);
+}
+
+.json-pre.json-with-highlight {
+  min-height: 2em;
+}
+
+.json-highlight-layer {
+  position: absolute;
+  top: 14px;
+  left: 16px;
+  right: 16px;
+  margin: 0;
+  padding: 0;
+  pointer-events: none;
+  white-space: pre;
+  z-index: 0;
+}
+
+.json-editable {
+  position: relative;
+  z-index: 1;
+  display: block;
+  background: transparent !important;
+  padding: 0;
+  white-space: pre;
+  min-height: 1.5em;
+}
+
+.json-with-highlight .json-editable {
+  color: transparent;
+  caret-color: #abb2bf;
+}
+
+.json-highlight-layer .json-key {
+  color: #e5c07b;
+}
+
+.json-highlight-layer .json-string {
+  color: #98c379;
+}
+
+.json-highlight-layer .json-number {
+  color: #d19a66;
+}
+
+.json-highlight-layer .json-bool {
+  color: #56b6c2;
+}
+
+.json-highlight-layer .json-null {
+  color: #c678dd;
+  font-style: italic;
+}
+
+.json-highlight-layer .json-punct {
+  color: #5c6370;
+}
+
+/* Saat tidak fokus di blok: teks terlihat (tanpa layer transparan) */
+.json-pre:not(.json-with-highlight) .json-editable {
+  color: #abb2bf;
+}

@@ -1,0 +1,141 @@
+.kanban-card-editor {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  background: var(--editor-bg, var(--bg-base));
+}
+
+.kanban-card-editor-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-surface);
+}
+
+.kanban-card-editor-breadcrumb {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.kanban-card-editor-breadcrumb .sep {
+  margin: 0 6px;
+  opacity: 0.5;
+}
+
+.kanban-card-editor-breadcrumb span:last-child {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.kanban-card-editor-status {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.kanban-card-editor-title {
+  margin: 0;
+  padding: 16px 20px 8px;
+  font-size: 22px;
+  font-weight: 700;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  outline: none;
+}
+
+.kanban-card-editor-title:focus {
+  box-shadow: inset 0 -2px 0 var(--accent);
+}
+
+.kanban-card-editor-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 0 20px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.kanban-card-editor-meta-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.kanban-card-editor-meta-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.kanban-card-editor-link {
+  padding: 0 20px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.kanban-card-editor-link-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.kanban-card-editor-link-row {
+  display: flex;
+  gap: 10px;
+  align-items: stretch;
+}
+
+.kanban-card-editor-link-select {
+  flex: 1;
+  min-width: 0;
+}
+
+.kanban-card-editor-open-note {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 14px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: var(--radius-md);
+  background: var(--accent-soft);
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.kanban-card-editor-open-note:hover {
+  background: var(--accent);
+  color: white;
+}
+
+.kanban-card-editor-hint {
+  margin: 8px 0 0;
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+.kanban-card-editor-body .kanban-card-editor-hint {
+  padding: 10px 20px 0;
+}
+
+.kanban-card-editor-body {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.kanban-card-editor-body .rich-editor-wrap {
+  height: 100%;
+}

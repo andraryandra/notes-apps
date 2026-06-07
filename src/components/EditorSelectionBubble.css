@@ -1,0 +1,62 @@
+.editor-selection-bubble {
+  visibility: visible !important;
+}
+
+.editor-selection-bubble-inner {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 6px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+}
+
+.editor-selection-bubble-inner button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 32px;
+  padding: 0 8px;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: background 0.12s, color 0.12s;
+}
+
+.editor-selection-bubble-inner button:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.editor-selection-bubble-inner button.is-danger:hover {
+  background: rgba(239, 68, 68, 0.12);
+  color: #ef4444;
+}
+
+.editor-selection-bubble-inner button span {
+  line-height: 1;
+}
+
+.editor-selection-bubble-divider {
+  width: 1px;
+  height: 22px;
+  margin: 0 4px;
+  background: var(--border);
+  flex-shrink: 0;
+}
+
+@media (max-width: 720px) {
+  .editor-selection-bubble-inner button span {
+    display: none;
+  }
+
+  .editor-selection-bubble-inner button {
+    width: 32px;
+    padding: 0;
+    justify-content: center;
+  }
+}
