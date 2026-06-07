@@ -44,6 +44,27 @@ npm run dev
 
 `npm run dev` opens an Electron window with hot reload.
 
+## Download & install (for everyone)
+
+Pre-built installers are published on **[GitHub Releases](https://github.com/andraryandra/notes-apps/releases)**.
+
+| Platform | File | How to install |
+|----------|------|----------------|
+| **Linux** | `Notes-*-Linux.AppImage` | Make executable → run, or use `npm run install:app` after building locally |
+| **Windows** | `Notes-*-Windows-Setup.exe` | Run the installer, then open **Notes** from the Start menu |
+| **macOS** | `Notes-*-macOS.dmg` | Open the DMG, drag **Notes** to Applications |
+
+### Publish a new release (maintainer)
+
+Push a version tag — GitHub Actions builds Linux, Windows, and macOS automatically:
+
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+Or run **Actions → Release → Run workflow** manually on GitHub.
+
 ## Production build
 
 ```bash
@@ -52,7 +73,15 @@ npm run build
 
 Installers are written to the `release/` folder.
 
-### Install / update AppImage (Linux)
+Build for one platform only:
+
+```bash
+npm run build:linux   # AppImage (Linux)
+npm run build:win     # NSIS installer (Windows)
+npm run build:mac     # DMG (macOS)
+```
+
+### Install / update AppImage (Linux, local)
 
 ```bash
 npm run install:app      # copy AppImage to ~/Applications

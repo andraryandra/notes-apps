@@ -5,10 +5,14 @@
   "main": "dist-electron/main.js",
   "scripts": {
     "dev": "vite",
-    "build": "vite build && electron-builder",
+    "icons": "bash scripts/generate-icons.sh",
+    "build": "npm run icons && vite build && electron-builder",
+    "build:linux": "npm run icons && vite build && electron-builder --linux",
+    "build:win": "npm run icons && vite build && electron-builder --win",
+    "build:mac": "npm run icons && vite build && electron-builder --mac",
     "install:app": "bash scripts/install-appimage.sh",
     "install:desktop": "bash scripts/install-desktop.sh",
-    "release:app": "npm run build && npm run install:app",
+    "release:app": "npm run build:linux && npm run install:app",
     "preview": "vite preview"
   },
   "build": {
@@ -17,6 +21,7 @@
     "directories": {
       "output": "release"
     },
+    "icon": "build/icon.png",
     "asar": true,
     "asarUnpack": [
       "**/node_modules/better-sqlite3/**"
@@ -38,7 +43,21 @@
         "AppImage"
       ],
       "category": "Office",
-      "executableName": "notes-app"
+      "executableName": "notes-app",
+      "artifactName": "Notes-${version}-Linux.${ext}"
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "artifactName": "Notes-${version}-Windows-Setup.${ext}"
+    },
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "category": "public.app-category.productivity",
+      "artifactName": "Notes-${version}-macOS.${ext}"
     }
   },
   "dependencies": {
