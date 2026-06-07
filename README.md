@@ -1,95 +1,97 @@
-# Notes — Aplikasi Catatan Electron
+# Notes — Electron Notes App
 
-Aplikasi catatan desktop dengan UI modern, dibangun dengan **Electron**, **React**, **TypeScript**, dan **TipTap** (rich text editor).
+A desktop notes app with a modern UI, built with **Electron**, **React**, **TypeScript**, and **TipTap** (rich text editor).
 
-![Dashboard Notes — ringkasan catatan, TODO, jadwal, dan aset](assets/screenshots/dashboard.png)
+![Notes dashboard — notes, TODO, schedule, and assets overview](assets/screenshots/dashboard.png)
 
-## Dokumentasi
+## Documentation
 
-| Audiens | Mulai dari |
-|---------|------------|
-| **Agent AI / developer baru** | [AGENTS.md](AGENTS.md) → [docs/00-INDEX.md](docs/00-INDEX.md) |
-| **Alur produk & fitur** | [docs/01-PRODUCT.md](docs/01-PRODUCT.md) |
-| **Arsitektur** | [docs/02-ARCHITECTURE.md](docs/02-ARCHITECTURE.md) |
-| **Tugas spesifik (file mana)** | [docs/06-TASK-GUIDE.md](docs/06-TASK-GUIDE.md) |
+| Audience | Start here |
+|----------|------------|
+| **AI agents / new developers** | [AGENTS.md](AGENTS.md) → [docs/00-INDEX.md](docs/00-INDEX.md) |
+| **Product & features** | [docs/01-PRODUCT.md](docs/01-PRODUCT.md) |
+| **Architecture** | [docs/02-ARCHITECTURE.md](docs/02-ARCHITECTURE.md) |
+| **Task-specific file map** | [docs/06-TASK-GUIDE.md](docs/06-TASK-GUIDE.md) |
 
-Skill Cursor proyek: `.cursor/skills/notes-app/SKILL.md`
+Cursor project skill: `.cursor/skills/notes-app/SKILL.md`
 
-## Fitur
+> Internal docs under `docs/` are written in Indonesian.
 
-- **Folder tak terbatas** — buat folder dan subfolder tanpa batas kedalaman
-- **Tags** — label warna untuk mengorganisir catatan
-- **Favorit & Pin** — favorit untuk filter; pin untuk urutan di atas daftar
-- **Pencarian global** — cari di judul dan isi semua catatan
-- **Editor rich text** — bold, italic, underline, strikethrough, ukuran font, heading, list
-- **Gambar & lampiran** — upload, paste, drag-drop; preview PDF/Office
-- **Kanban TODO** — papan kolom dengan kartu berisi catatan HTML
-- **Jadwal** — kalender catatan & kartu terjadwal
-- **Dashboard** — ringkasan dan jelajahi data
-- **Ekspor** — Markdown, PDF, HTML, Teks
-- **Pintasan keyboard** — Ctrl+N, Ctrl+F, Ctrl+,, Ctrl+Shift+P/E (lihat Pengaturan)
-- **Hapus bulk** — pilih banyak catatan sekaligus
-- **14 tema** + mode layout klasik / fokus
-- **Penyimpanan SQLite** — `notes.db` lokal dengan migrasi skema berversi
-- **Backup & restore** — folder backup (DB + settings + file disk)
+## Features
 
-## Menjalankan
+- **Unlimited folders** — create folders and subfolders with no depth limit
+- **Tags** — colored labels to organize notes
+- **Favorites & pin** — favorites for filtering; pin to keep notes at the top of the list
+- **Global search** — search titles and content across all notes
+- **Rich text editor** — bold, italic, underline, strikethrough, font size, headings, lists
+- **Images & attachments** — upload, paste, drag-and-drop; PDF/Office preview
+- **Kanban TODO** — column board with HTML note cards
+- **Schedule** — calendar for notes and scheduled cards
+- **Dashboard** — overview and data explorer
+- **Export** — Markdown, PDF, HTML, plain text
+- **Keyboard shortcuts** — Ctrl+N, Ctrl+F, Ctrl+,, Ctrl+Shift+P/E (see Settings)
+- **Bulk delete** — select and delete multiple notes at once
+- **14 themes** + classic / focus layout modes
+- **SQLite storage** — local `notes.db` with versioned schema migrations
+- **Backup & restore** — backup folder (DB + settings + files on disk)
+
+## Running locally
 
 ```bash
 npm install
 npm run dev
 ```
 
-Perintah `npm run dev` akan membuka jendela Electron dengan hot reload.
+`npm run dev` opens an Electron window with hot reload.
 
-## Build produksi
+## Production build
 
 ```bash
 npm run build
 ```
 
-Output installer ada di folder `release/`.
+Installers are written to the `release/` folder.
 
-### Pasang / update AppImage (Linux)
+### Install / update AppImage (Linux)
 
 ```bash
-npm run install:app      # salin AppImage ke ~/Applications
-npm run release:app      # build + salin sekaligus
-npm run install:desktop  # daftar ulang menu desktop saja
+npm run install:app      # copy AppImage to ~/Applications
+npm run release:app      # build + copy in one step
+npm run install:desktop  # refresh desktop menu entry only
 ```
 
-## Struktur
+## Project structure
 
 ```
-electron/     → Main process, SQLite, migrasi, IPC
-src/          → React UI, hooks, komponen
-docs/         → Dokumentasi produk & panduan agent
+electron/     → Main process, SQLite, migrations, IPC
+src/          → React UI, hooks, components
+docs/         → Product docs & agent guides
 ```
 
-## Pintasan keyboard
+## Keyboard shortcuts
 
-| Pintasan | Fungsi |
+| Shortcut | Action |
 |----------|--------|
-| Ctrl+N | Catatan baru |
-| Ctrl+F | Fokus pencarian |
-| Ctrl+, | Pengaturan |
-| Ctrl+Shift+P | Pin / lepas pin |
-| Ctrl+Shift+E | Ekspor Markdown |
-| Ctrl+B / Ctrl+I | Bold / Italic (di editor) |
+| Ctrl+N | New note |
+| Ctrl+F | Focus search |
+| Ctrl+, | Settings |
+| Ctrl+Shift+P | Pin / unpin |
+| Ctrl+Shift+E | Export Markdown |
+| Ctrl+B / Ctrl+I | Bold / Italic (in editor) |
 
-Di macOS gunakan **Cmd** sebagai pengganti Ctrl.
+On macOS, use **Cmd** instead of Ctrl.
 
-## Data
+## Data locations
 
-| Platform | Lokasi |
-|----------|--------|
+| Platform | Path |
+|----------|------|
 | Linux | `~/.config/notes-app/` |
 | macOS | `~/Library/Application Support/notes-app/` |
 | Windows | `%APPDATA%/notes-app/` |
 
-| File | Isi |
-|------|-----|
-| `notes.db` | Database SQLite |
-| `settings.json` | Tema, layout |
-| `images/` | Gambar |
-| `attachments/` | Lampiran file |
+| File | Contents |
+|------|----------|
+| `notes.db` | SQLite database |
+| `settings.json` | Theme, layout |
+| `images/` | Images |
+| `attachments/` | File attachments |
