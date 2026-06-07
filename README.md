@@ -2,6 +2,8 @@
 
 Aplikasi catatan desktop dengan UI modern, dibangun dengan **Electron**, **React**, **TypeScript**, dan **TipTap** (rich text editor).
 
+![Dashboard Notes — ringkasan catatan, TODO, jadwal, dan aset](assets/screenshots/dashboard.png)
+
 ## Dokumentasi
 
 | Audiens | Mulai dari |
@@ -91,5 +93,3 @@ Di macOS gunakan **Cmd** sebagai pengganti Ctrl.
 | `settings.json` | Tema, layout |
 | `images/` | Gambar |
 | `attachments/` | Lampiran file |
-# notes-apps
-# notes-apps
