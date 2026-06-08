@@ -1,8 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import * as pdfjsLib from 'pdfjs-dist';
+import { pdfjsLib } from '../utils/pdfjsSetup';
 import './PdfPreview.css';
-
-pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
 
 interface PdfPageProps {
   pdf: pdfjsLib.PDFDocumentProxy;

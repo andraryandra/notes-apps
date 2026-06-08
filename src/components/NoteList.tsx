@@ -7,7 +7,6 @@ import {
   useEffect,
   type MouseEvent,
 } from 'react';
-import { useVirtualizer } from '@tanstack/react-virtual';
 import { Plus, Star, Trash2, CheckSquare, Square, X, Pin, FolderInput } from 'lucide-react';
 import { stripHtml, getFolderPath } from '../hooks/useNotesStore';
 import { useListScrollClass } from '../hooks/useListScrollClass';
@@ -241,13 +240,6 @@ const NoteListInner = memo(function NoteListInner({
     return meta;
   }, [sorted, folders, linkedCountByNote]);
 
-  const rowVirtualizer = useVirtualizer({
-    count: sorted.length,
-    getScrollElement: () => scrollRef.current,
-    estimateSize: () => 104,
-    overscan: 3,
-  });
-
   const allChecked = sorted.length > 0 && checkedIds.size === sorted.length;
   const someChecked = checkedIds.size > 0;
 
@@ -394,21 +386,11 @@ const NoteListInner = memo(function NoteListInner({
             </button>
           </div>
         ) : (
-          <div
-            className="note-list-virtual-inner"
-            style={{ height: `${rowVirtualizer.getTotalSize()}px` }}
-          >
-            {rowVirtualizer.getVirtualItems().map((virtualRow) => {
-              const note = sorted[virtualRow.index];
+          <div className="note-list-items">
+            {sorted.map((note) => {
               const meta = cardMetaById.get(note.id)!;
               return (
-                <div
-                  key={note.id}
-                  data-index={virtualRow.index}
-                  ref={rowVirtualizer.measureElement}
-                  className="note-list-virtual-row"
-                  style={{ transform: `translateY(${virtualRow.start}px)` }}
-                >
+                <div key={note.id} className="note-list-row">
                   <NoteCard
                     note={note}
                     isSelected={selectedNoteId === note.id}
