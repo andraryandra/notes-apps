@@ -7,6 +7,7 @@
     "dev": "vite",
     "icons": "bash scripts/generate-icons.sh",
     "build": "npm run icons && vite build && electron-builder",
+    "build:bundle": "vite build",
     "build:linux": "npm run icons && vite build && electron-builder --linux",
     "build:win": "npm run icons && vite build && electron-builder --win",
     "build:mac": "npm run icons && vite build && electron-builder --mac",
