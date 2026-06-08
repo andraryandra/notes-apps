@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
     inputs:
       version_tag:
-        description: 'Tag versi (mis. v1.2.1). Kosongkan = branch/tag saat ini.'
+        description: 'Tag versi (mis. v1.2.1). Kosongkan = pakai versi package.json.'
         required: false
 
 permissions:
@@ -49,10 +49,13 @@ jobs:
         include:
           - os: ubuntu-latest
             platform: linux
+            artifact_glob: release/*.AppImage
           - os: windows-latest
             platform: win
+            artifact_glob: release/*.exe
           - os: macos-latest
             platform: mac
+            artifact_glob: release/*.dmg
 
     steps:
       - name: Checkout
@@ -75,6 +78,15 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Sync version from release tag
+        shell: bash
+        run: |
+          TAG="${{ github.event.release.tag_name || inputs.version_tag }}"
+          if [ -n "$TAG" ]; then
+            VER="${TAG#v}"
+            npm version "$VER" --no-git-tag-version --allow-same-version
+          fi
+
       - name: Verify icon
         shell: bash
         run: test -f build/icon.png
@@ -82,8 +94,51 @@ jobs:
       - name: Build renderer + Electron
         run: npx vite build
 
-      - name: Package and publish
-        run: npx electron-builder --${{ matrix.platform }} --publish always
+      - name: Package installer
+        run: npx electron-builder --${{ matrix.platform }} --publish never
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+
+      - name: Upload installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: notes-installer-${{ matrix.platform }}
+          path: ${{ matrix.artifact_glob }}
+          if-no-files-found: error
+
+  publish:
+    name: Attach to GitHub Release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Resolve release tag
+        id: tag
+        shell: bash
+        run: |
+          if [ -n "${{ github.event.release.tag_name }}" ]; then
+            echo "tag=${{ github.event.release.tag_name }}" >> "$GITHUB_OUTPUT"
+          elif [ -n "${{ inputs.version_tag }}" ]; then
+            echo "tag=${{ inputs.version_tag }}" >> "$GITHUB_OUTPUT"
+          else
+            VER=$(node -p "require('./package.json').version")
+            echo "tag=v${VER}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v4
+
+      - name: Download installers
+        uses: actions/download-artifact@v4
+        with:
+          pattern: notes-installer-*
+          merge-multiple: true
+          path: installers
+
+      - name: List installers
+        run: ls -lah installers/
+
+      - name: Upload to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag.outputs.tag }}
+          files: installers/*
+          fail_on_unmatched_files: true
