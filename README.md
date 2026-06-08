@@ -101,6 +101,9 @@ git push origin main
 2. Push workflow `.github/workflows/release-please.yml` ke `main` (sudah ada di repo ini).
 3. Commit pertama kali mungkin langsung membuat Release PR dari `1.0.0`.
 
+> **Commit lama tanpa prefix `feat:`/`fix:`?**  
+> Release Please mengabaikan commit sebelum `bootstrap-sha` di `.github/release-please-config.json` (baseline v1.0.0). Hanya commit baru dengan Conventional Commits yang masuk changelog.
+
 #### Release manual (opsional)
 
 Masih bisa pakai tag manual — workflow `Release` tetap jalan saat push tag `v*`:
