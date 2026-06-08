@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.2.2](https://github.com/andraryandra/notes-apps/compare/v1.2.1...v1.2.2) (2026-06-08)
+
+
+### Bug Fixes
+
+* upload installer ke GitHub Release lewat artifact ([59e9b67](https://github.com/andraryandra/notes-apps/commit/59e9b67bc9b2d67339d57b10ca6e793d7a255e44))
+* upload installer ke GitHub Release lewat artifact ([277fe4a](https://github.com/andraryandra/notes-apps/commit/277fe4a4fc229301abcb52b090cd1c93fc5e3632))
+
 ## [1.2.1](https://github.com/andraryandra/notes-apps/compare/v1.2.0...v1.2.1) (2026-06-08)
 
 
