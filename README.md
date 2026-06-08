@@ -48,6 +48,26 @@ npm run dev
 
 `npm run dev` opens an Electron window with hot reload.
 
+## Branch workflow
+
+| Branch | Fungsi |
+|--------|--------|
+| `development` | Pengembangan sehari-hari — push commit di sini |
+| `main` | Produksi & release — merge dari `development` memicu Release Please + build installer |
+
+Alur disarankan:
+
+```bash
+git checkout development
+# ... edit, commit dengan feat: / fix: ...
+git push origin development
+
+# Siap rilis → buka PR development → main di GitHub, lalu merge
+# Release Please + auto-merge + build jalan otomatis di main
+```
+
+Release Please dan auto-merge **hanya** jalan saat push/merge ke `main`, bukan `development`.
+
 ## Download & install (for everyone)
 
 Pre-built installers are published on **[GitHub Releases](https://github.com/andraryandra/notes-apps/releases)**.
