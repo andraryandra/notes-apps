@@ -1,10 +1,18 @@
 name: Release
 
+# Release Please membuat tag + GitHub Release lewat API (bukan git push tag),
+# jadi trigger `push: tags` saja tidak cukup — perlu `release: published`.
 on:
   push:
     tags:
       - 'v*'
+  release:
+    types: [published]
   workflow_dispatch:
+    inputs:
+      version_tag:
+        description: 'Tag versi (mis. v1.2.1). Kosongkan = branch/tag saat ini.'
+        required: false
 
 permissions:
   contents: write
@@ -16,6 +24,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name || inputs.version_tag || github.ref }}
 
       - name: Install rsvg
         run: sudo apt-get update && sudo apt-get install -y librsvg2-bin
@@ -47,6 +57,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name || inputs.version_tag || github.ref }}
 
       - name: Download icon
         uses: actions/download-artifact@v4
