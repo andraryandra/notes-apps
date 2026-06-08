@@ -509,6 +509,41 @@
   animation: settings-icon-spin 0.8s linear infinite;
 }
 
+.settings-toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.settings-toggle-row input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+}
+
+.settings-typing-volume {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.settings-typing-volume-label {
+  font-size: 13px;
+  color: var(--text-secondary);
+  min-width: 56px;
+}
+
+.settings-typing-volume input[type='range'] {
+  flex: 1;
+  min-width: 140px;
+  accent-color: var(--accent);
+}
+
 .settings-timezone-select:focus {
   outline: 2px solid var(--accent-soft);
   border-color: var(--accent);

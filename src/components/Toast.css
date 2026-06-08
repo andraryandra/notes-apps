@@ -30,6 +30,15 @@
   color: var(--success);
 }
 
+.toast-error {
+  border-color: color-mix(in srgb, var(--danger) 45%, var(--border));
+}
+
+.toast-error .toast-icon {
+  flex-shrink: 0;
+  color: var(--danger);
+}
+
 .toast-text {
   font-size: 13px;
   line-height: 1.4;

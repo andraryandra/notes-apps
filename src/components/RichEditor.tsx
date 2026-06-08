@@ -9,7 +9,7 @@ import TextStyle from '@tiptap/extension-text-style';
 import Color from '@tiptap/extension-color';
 import Highlight from '@tiptap/extension-highlight';
 import Link from '@tiptap/extension-link';
-import Table from '@tiptap/extension-table';
+import { NoteTable } from '../extensions/NoteTable';
 import TableRow from '@tiptap/extension-table-row';
 import TableCell from '@tiptap/extension-table-cell';
 import TableHeader from '@tiptap/extension-table-header';
@@ -29,6 +29,7 @@ import {
   Minus,
   Link2,
   Unlink,
+  Table2,
 } from 'lucide-react';
 import { normalizeUrl } from '../utils/normalizeUrl';
 import { FontSize } from '../extensions/FontSize';
@@ -42,6 +43,7 @@ import { FilePasteDrop } from '../extensions/FilePasteDrop';
 import { CodeBlockContextMenu } from './CodeBlockContextMenu';
 import { EditorSelectionBubble } from './EditorSelectionBubble';
 import { EditorContextMenu } from './EditorContextMenu';
+import { TableToolbarPanel } from './TableToolbarPanel';
 import { insertAttachmentFromPick } from '../utils/attachmentInsert';
 import { persistAndInsertImage } from '../utils/imageInsert';
 import { copyNotePlain, copyNoteHtml, getEditorPlainText } from '../utils/exportNote';
@@ -93,7 +95,7 @@ export function RichEditor({
   onToggleTag = () => {},
   onEditorReady,
 }: Props) {
-  const { t, locale } = useI18n();
+  const { t } = useI18n();
   const editorRef = useRef<Editor | null>(null);
   const dropZoneRef = useRef<HTMLDivElement>(null);
   const { showSuccess } = useToast();
@@ -102,6 +104,7 @@ export function RichEditor({
     null
   );
   const [linkBarOpen, setLinkBarOpen] = useState(false);
+  const [tablePanelOpen, setTablePanelOpen] = useState(false);
   const [linkInput, setLinkInput] = useState('https://');
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
@@ -136,7 +139,7 @@ export function RichEditor({
           spellcheck: 'false',
         },
       }),
-      Table.configure({ resizable: false, HTMLAttributes: { class: 'notes-table' } }),
+      NoteTable.configure({ resizable: false, HTMLAttributes: { class: 'notes-table' } }),
       TableRow,
       TableHeader,
       TableCell,
@@ -173,13 +176,28 @@ export function RichEditor({
         return true;
       },
     },
-  }, [locale, t]);
+  });
 
   editorRef.current = editor;
 
   useEffect(() => {
+    if (!editor) return;
+    const placeholder = editor.extensionManager.extensions.find((e) => e.name === 'placeholder');
+    if (placeholder) {
+      placeholder.options.placeholder = t('richEditor.placeholder');
+      editor.view.dispatch(editor.state.tr);
+    }
+    const link = editor.extensionManager.extensions.find((e) => e.name === 'link');
+    if (link?.options?.HTMLAttributes) {
+      link.options.HTMLAttributes.title = t('richEditor.linkTitle');
+    }
+  }, [editor, t]);
+
+  useEffect(() => {
     onEditorReady?.(editor ?? null);
-    return () => onEditorReady?.(null);
+    return () => {
+      onEditorReady?.(null);
+    };
   }, [editor, onEditorReady]);
 
   /** Flush HTML ke store hanya saat unmount jika benar-benar berubah */
@@ -309,6 +327,7 @@ export function RichEditor({
   }, [editor, noteTitle, showSuccess, t]);
 
   const openLinkBar = useCallback(() => {
+    setTablePanelOpen(false);
     if (!editor) return;
     const { empty } = editor.state.selection;
     if (empty && !editor.isActive('link')) {
@@ -367,6 +386,7 @@ export function RichEditor({
   if (!editor) return null;
 
   const currentSize = editor.getAttributes('textStyle').fontSize || '16px';
+  const inTable = editor.isActive('table');
 
   return (
     <div className="rich-editor">
@@ -481,6 +501,17 @@ export function RichEditor({
           >
             <Minus size={16} />
           </button>
+          <button
+            type="button"
+            className={inTable || tablePanelOpen ? 'active' : ''}
+            onClick={() => {
+              setLinkBarOpen(false);
+              setTablePanelOpen((v) => !v);
+            }}
+            title={inTable ? t('richEditor.tableSettings') : t('richEditor.insertTable')}
+          >
+            <Table2 size={16} />
+          </button>
         </div>
 
         <div className="toolbar-divider" />
@@ -536,6 +567,14 @@ export function RichEditor({
           </>
         )}
       </div>
+
+      {tablePanelOpen && (
+        <TableToolbarPanel
+          editor={editor}
+          open={tablePanelOpen}
+          onClose={() => setTablePanelOpen(false)}
+        />
+      )}
 
       {linkBarOpen && (
         <div className="link-edit-bar">

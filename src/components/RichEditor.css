@@ -296,9 +296,35 @@
 .editor-content-wrap .ProseMirror table td,
 .editor-content-wrap .ProseMirror table th {
   border: 1px solid var(--border);
+  border-style: solid;
   padding: 8px 12px;
   vertical-align: top;
   min-width: 48px;
+}
+
+.editor-content-wrap .ProseMirror table[data-border-width='0'] td,
+.editor-content-wrap .ProseMirror table[data-border-width='0'] th {
+  border-width: 0;
+}
+
+.editor-content-wrap .ProseMirror table[data-border-width='2'] td,
+.editor-content-wrap .ProseMirror table[data-border-width='2'] th {
+  border-width: 2px;
+}
+
+.editor-content-wrap .ProseMirror table[data-border-width='3'] td,
+.editor-content-wrap .ProseMirror table[data-border-width='3'] th {
+  border-width: 3px;
+}
+
+.editor-content-wrap .ProseMirror table[data-border-style='dashed'] td,
+.editor-content-wrap .ProseMirror table[data-border-style='dashed'] th {
+  border-style: dashed;
+}
+
+.editor-content-wrap .ProseMirror table[data-border-style='dotted'] td,
+.editor-content-wrap .ProseMirror table[data-border-style='dotted'] th {
+  border-style: dotted;
 }
 
 .editor-content-wrap .ProseMirror table th {
@@ -309,6 +335,10 @@
 
 .editor-content-wrap .ProseMirror table tr:nth-child(even) td {
   background: color-mix(in srgb, var(--editor-text) 4%, transparent);
+}
+
+.editor-content-wrap .ProseMirror > table + p {
+  min-height: 1.75em;
 }
 
 .editor-content-wrap .ProseMirror mark {
