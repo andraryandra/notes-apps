@@ -68,7 +68,7 @@ Release otomatis memakai **[Release Please](https://github.com/googleapis/releas
 Commit (format Conventional Commits)
   → workflow "Release Please" membuka/meng-update PR "release"
   → PR berisi bump package.json + CHANGELOG.md
-  → Anda merge PR tersebut
+  → workflow "Auto-merge Release PR" merge PR otomatis
   → bot membuat tag vX.Y.Z + GitHub Release (catatan perbaikan)
   → workflow "Release" membangun AppImage / .exe / .dmg + manifest auto-update
 ```
@@ -92,14 +92,15 @@ Contoh:
 git commit -m "fix: konfirmasi hapus catatan tunggal"
 git commit -m "feat: auto-update dari GitHub Releases"
 git push origin main
-# Cek tab Pull Requests → merge PR "chore(main): release X.Y.Z"
+# PR release di-merge otomatis → tag + build installer jalan sendiri
 ```
 
 #### Setup sekali di GitHub
 
 1. Repo → **Settings** → **Actions** → **General** → Workflow permissions → **Read and write permissions** (Save).
 2. Push workflow `.github/workflows/release-please.yml` ke `main` (sudah ada di repo ini).
-3. Commit pertama kali mungkin langsung membuat Release PR dari `1.0.0`.
+3. Centang **Allow GitHub Actions to create and approve pull requests** (di halaman yang sama).
+4. Commit pertama kali mungkin langsung membuat Release PR dari `1.0.0` (lalu auto-merge).
 
 > **Commit lama tanpa prefix `feat:`/`fix:`?**  
 > Release Please mengabaikan commit sebelum `bootstrap-sha` di `.github/release-please-config.json` (baseline v1.0.0). Hanya commit baru dengan Conventional Commits yang masuk changelog.
