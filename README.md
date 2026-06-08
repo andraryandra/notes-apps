@@ -48,6 +48,26 @@ npm run dev
 
 `npm run dev` opens an Electron window with hot reload.
 
+## Branch workflow
+
+| Branch | Purpose |
+|--------|---------|
+| `development` | Day-to-day development — push commits here |
+| `main` | Production & releases — merging from `development` triggers Release Please + installer builds |
+
+Recommended flow:
+
+```bash
+git checkout development
+# ... edit, commit with feat: / fix: ...
+git push origin development
+
+# Ready to ship → open a PR development → main on GitHub, then merge
+# Release Please + auto-merge + build run automatically on main
+```
+
+Release Please and auto-merge run **only** on push/merge to `main`, not on `development`.
+
 ## Download & install (for everyone)
 
 Pre-built installers are published on **[GitHub Releases](https://github.com/andraryandra/notes-apps/releases)**.
@@ -60,62 +80,62 @@ Pre-built installers are published on **[GitHub Releases](https://github.com/and
 
 ### Publish a new release (maintainer)
 
-Release otomatis memakai **[Release Please](https://github.com/googleapis/release-please)** + GitHub Actions.
+Releases are automated with **[Release Please](https://github.com/googleapis/release-please)** + GitHub Actions.
 
-#### Alur (setelah push ke `main`)
+#### Flow (after push to `main`)
 
 ```
-Commit (format Conventional Commits)
-  → workflow "Release Please" membuka/meng-update PR "release"
-  → PR berisi bump package.json + CHANGELOG.md
-  → workflow "Auto-merge Release PR" merge PR otomatis
-  → bot membuat tag vX.Y.Z + GitHub Release (catatan perbaikan)
-  → workflow "Release" membangun AppImage / .exe / .dmg + manifest auto-update
+Commit (Conventional Commits format)
+  → "Release Please" workflow opens/updates a release PR
+  → PR bumps package.json + CHANGELOG.md
+  → "Auto-merge Release PR" workflow merges the PR automatically
+  → bot creates tag vX.Y.Z + GitHub Release (release notes)
+  → "Release" workflow builds AppImage / .exe / .dmg + auto-update manifests
 ```
 
-#### Format pesan commit (penting)
+#### Commit message format (required)
 
-Release Please membaca prefix commit untuk menentukan versi dan isi changelog:
+Release Please uses commit prefixes to determine version bumps and changelog entries:
 
-| Prefix | Contoh | Efek versi |
-|--------|--------|------------|
-| `fix:` | `fix: dialog hapus catatan lag` | patch (1.0.0 → 1.0.1) |
-| `feat:` | `feat: pindah catatan ke folder` | minor (1.0.0 → 1.1.0) |
-| `feat!:` atau `BREAKING CHANGE:` | `feat!: ubah skema SQLite` | major (1.0.0 → 2.0.0) |
-| `chore:` / `docs:` | `docs: update README` | tidak naik versi sendiri* |
+| Prefix | Example | Version bump |
+|--------|---------|--------------|
+| `fix:` | `fix: fix lag on delete confirmation dialog` | patch (1.0.0 → 1.0.1) |
+| `feat:` | `feat: move notes to folder` | minor (1.0.0 → 1.1.0) |
+| `feat!:` or `BREAKING CHANGE:` | `feat!: change SQLite schema` | major (1.0.0 → 2.0.0) |
+| `chore:` / `docs:` | `docs: update README` | no bump on its own* |
 
-\*Commit `chore`/`docs` ikut masuk changelog release berikutnya jika digabung dengan `feat`/`fix`.
+\*`chore`/`docs` commits are included in the next release changelog when combined with `feat`/`fix` commits.
 
-Contoh:
+Example:
 
 ```bash
-git commit -m "fix: konfirmasi hapus catatan tunggal"
-git commit -m "feat: auto-update dari GitHub Releases"
+git commit -m "fix: confirm before deleting a single note"
+git commit -m "feat: auto-update from GitHub Releases"
 git push origin main
-# PR release di-merge otomatis → tag + build installer jalan sendiri
+# Release PR is auto-merged → tag + installer build run automatically
 ```
 
-#### Setup sekali di GitHub
+#### One-time GitHub setup
 
 1. Repo → **Settings** → **Actions** → **General** → Workflow permissions → **Read and write permissions** (Save).
-2. Push workflow `.github/workflows/release-please.yml` ke `main` (sudah ada di repo ini).
-3. Centang **Allow GitHub Actions to create and approve pull requests** (di halaman yang sama).
-4. Commit pertama kali mungkin langsung membuat Release PR dari `1.0.0` (lalu auto-merge).
+2. Enable **Allow GitHub Actions to create and approve pull requests** (same page).
+3. Workflows live in `.github/workflows/` (already in this repo).
+4. The first run may open a Release PR from `1.0.0` (then auto-merge).
 
-> **Commit lama tanpa prefix `feat:`/`fix:`?**  
-> Release Please mengabaikan commit sebelum `bootstrap-sha` di `.github/release-please-config.json` (baseline v1.0.0). Hanya commit baru dengan Conventional Commits yang masuk changelog.
+> **Old commits without `feat:`/`fix:`?**  
+> Release Please ignores commits before `bootstrap-sha` in `.github/release-please-config.json` (baseline v1.0.0). Only new Conventional Commits are included in the changelog.
 
-#### Release manual (opsional)
+#### Manual release (optional)
 
-Masih bisa pakai tag manual — workflow `Release` tetap jalan saat push tag `v*`:
+You can still push a tag manually — the `Release` workflow runs on any `v*` tag:
 
 ```bash
-# Edit version di package.json dulu, lalu:
+# Bump version in package.json first, then:
 git tag v1.0.0
 git push origin v1.0.0
 ```
 
-Atau **Actions → Release → Run workflow** di GitHub.
+Or run **Actions → Release → Run workflow** on GitHub.
 
 ## Production build
 
