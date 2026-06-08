@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.2.1](https://github.com/andraryandra/notes-apps/compare/v1.2.0...v1.2.1) (2026-06-08)
+
+
+### Bug Fixes
+
+* update NoteList component to use flexbox layout and remove virtu… ([526af92](https://github.com/andraryandra/notes-apps/commit/526af92c444c36b2e69e0b6af594803a3b3e21c8))
+* update NoteList component to use flexbox layout and remove virtualization ([245a27e](https://github.com/andraryandra/notes-apps/commit/245a27e7739c09b2e42ae06911cb070f04cc6237))
+
 ## [1.2.0](https://github.com/andraryandra/notes-apps/compare/v1.1.0...v1.2.0) (2026-06-08)
 
 
