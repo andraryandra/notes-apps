@@ -80,7 +80,7 @@ jobs:
         run: test -f build/icon.png
 
       - name: Build renderer + Electron
-        run: npm run build:bundle
+        run: npx vite build
 
       - name: Package and publish
         run: npx electron-builder --${{ matrix.platform }} --publish always
