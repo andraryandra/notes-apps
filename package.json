@@ -58,11 +58,17 @@
       ],
       "category": "public.app-category.productivity",
       "artifactName": "Notes-${version}-macOS.${ext}"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "andraryandra",
+      "repo": "notes-apps"
     }
   },
   "dependencies": {
     "@tanstack/react-virtual": "^3.14.2",
     "better-sqlite3": "^11.9.1",
+    "electron-updater": "^6.6.2",
     "pdfjs-dist": "^4.10.38"
   },
   "devDependencies": {

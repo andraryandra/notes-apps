@@ -1,12 +1,14 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
-import { X, Download, Upload, HardDrive, FolderOpen, Trash2, Image, Paperclip, Database, Keyboard, Languages, Globe } from 'lucide-react';
+import { X, Download, Upload, HardDrive, FolderOpen, Trash2, Image, Paperclip, Database, Keyboard, Languages, Globe, ZoomIn, ZoomOut, RotateCcw, RefreshCw } from 'lucide-react';
 import { useToast } from '../hooks/useToast';
+import { useConfirm } from '../hooks/useConfirm';
 import { useI18n } from '../i18n/useI18n';
 import { createTranslator } from '../i18n/translator';
 import {
   THEME_OPTIONS,
   LAYOUT_OPTIONS,
   APP_LOCALES,
+  uiZoomPercent,
   type AppLocale,
   type AppTheme,
   type AppLayoutMode,
@@ -33,11 +35,15 @@ interface Props {
   scrollBatchSize: ScrollBatchSize;
   locale: AppLocale;
   timeZone: string;
+  uiZoomLevel: number;
   onThemeChange: (t: AppTheme) => void;
   onLayoutChange: (l: AppLayoutMode) => void;
   onScrollBatchSizeChange: (size: ScrollBatchSize) => void;
   onLocaleChange: (locale: AppLocale) => void;
   onTimeZoneChange: (timeZone: string) => void;
+  onUiZoomLevelChange: (level: number) => void;
+  onAdjustUiZoomLevel: (delta: number) => void;
+  onCheckForUpdates: () => Promise<unknown>;
   onClose: () => void;
   onRestoreComplete: () => void;
 }
@@ -48,6 +54,8 @@ const SHORTCUT_ROWS = [
   { keys: 'Ctrl+,', labelKey: 'shortcuts.openSettings' },
   { keys: 'Ctrl+Shift+P', labelKey: 'shortcuts.togglePin' },
   { keys: 'Ctrl+Shift+E', labelKey: 'shortcuts.exportNote' },
+  { keys: 'Ctrl + / Ctrl -', labelKey: 'shortcuts.zoom' },
+  { keys: 'Ctrl+0', labelKey: 'shortcuts.zoomReset' },
   { keys: 'Esc', labelKey: 'shortcuts.escape' },
 ] as const;
 
@@ -57,16 +65,23 @@ export function SettingsModal({
   scrollBatchSize,
   locale,
   timeZone,
+  uiZoomLevel,
   onThemeChange,
   onLayoutChange,
   onScrollBatchSizeChange,
   onLocaleChange,
   onTimeZoneChange,
+  onUiZoomLevelChange,
+  onAdjustUiZoomLevel,
+  onCheckForUpdates,
   onClose,
   onRestoreComplete,
 }: Props) {
   const { t, locale: ctxLocale } = useI18n();
+  const { confirm } = useConfirm();
   const dateLocaleTag = localeTag(ctxLocale);
+  const [appVersion, setAppVersion] = useState('…');
+  const [checkingUpdate, setCheckingUpdate] = useState(false);
   const timezoneOptions = useMemo(() => {
     const ids = new Set<string>(APP_TIME_ZONES);
     if (isValidTimeZone(timeZone)) ids.add(timeZone);
@@ -96,6 +111,19 @@ export function SettingsModal({
     void reloadStorage();
   }, [reloadStorage]);
 
+  useEffect(() => {
+    void window.electronAPI?.getAppVersion().then((v) => setAppVersion(v));
+  }, []);
+
+  const handleCheckUpdate = async () => {
+    setCheckingUpdate(true);
+    try {
+      await onCheckForUpdates();
+    } finally {
+      setCheckingUpdate(false);
+    }
+  };
+
   const handleExport = async () => {
     setBusy(true);
     const res = await window.electronAPI.exportBackup();
@@ -106,7 +134,12 @@ export function SettingsModal({
   };
 
   const handleRestore = async () => {
-    const ok = window.confirm(t('settings.restoreConfirm'));
+    const ok = await confirm({
+      title: t('settings.restoreTitle'),
+      message: t('settings.restoreConfirm'),
+      confirmLabel: t('settings.restoreConfirmAction'),
+      variant: 'danger',
+    });
     if (!ok) return;
 
     setBusy(true);
@@ -128,7 +161,12 @@ export function SettingsModal({
     if (used) {
       const entry = inventory?.files.find((f) => f.fileId === fileId);
       const notes = entry?.usedInNotes.join(', ') || t('settings.someNotes');
-      const ok = window.confirm(t('settings.deleteUsedFileConfirm', { notes }));
+      const ok = await confirm({
+        title: t('settings.confirmDeleteFile'),
+        message: t('settings.deleteUsedFileConfirm', { notes }),
+        confirmLabel: t('common.delete'),
+        variant: 'danger',
+      });
       if (!ok) return;
       setBusy(true);
       const res = await window.electronAPI.deleteStoredFile(fileId, true);
@@ -140,7 +178,12 @@ export function SettingsModal({
       return;
     }
 
-    const ok = window.confirm(t('settings.deleteFileConfirm', { name: displayName }));
+    const ok = await confirm({
+      title: t('settings.confirmDeleteFile'),
+      message: t('settings.deleteFileConfirm', { name: displayName }),
+      confirmLabel: t('common.delete'),
+      variant: 'danger',
+    });
     if (!ok) return;
     setBusy(true);
     const res = await window.electronAPI.deleteStoredFile(fileId);
@@ -197,7 +240,13 @@ export function SettingsModal({
     if (usedCount > 0) {
       message += t('settings.bulkDeleteUsedWarning', { count: usedCount });
     }
-    if (!window.confirm(message)) return;
+    const ok = await confirm({
+      title: t('settings.confirmDeleteFiles'),
+      message,
+      confirmLabel: t('common.delete'),
+      variant: 'danger',
+    });
+    if (!ok) return;
 
     setBusy(true);
     let deleted = 0;
@@ -216,7 +265,12 @@ export function SettingsModal({
 
   const handleDeleteUnused = async () => {
     if (!inventory?.unusedCount) return;
-    const ok = window.confirm(t('settings.deleteUnusedConfirm', { count: inventory.unusedCount }));
+    const ok = await confirm({
+      title: t('settings.confirmDeleteUnused'),
+      message: t('settings.deleteUnusedConfirm', { count: inventory.unusedCount }),
+      confirmLabel: t('common.delete'),
+      variant: 'danger',
+    });
     if (!ok) return;
     setBusy(true);
     const res = await window.electronAPI?.deleteUnusedStoredFiles();
@@ -287,6 +341,62 @@ export function SettingsModal({
               </option>
             ))}
           </select>
+        </section>
+
+        <section className="settings-section">
+          <h3>
+            <ZoomIn size={16} />
+            {t('settings.zoom')}
+          </h3>
+          <p className="settings-info-text">{t('settings.zoomDesc')}</p>
+          <div className="settings-page-size-row settings-zoom-row">
+            <button
+              type="button"
+              className="settings-page-size-btn"
+              disabled={busy}
+              title={t('settings.zoomOut')}
+              onClick={() => void onAdjustUiZoomLevel(-0.5)}
+            >
+              <ZoomOut size={16} />
+            </button>
+            <span className="settings-zoom-value">{uiZoomPercent(uiZoomLevel)}%</span>
+            <button
+              type="button"
+              className="settings-page-size-btn"
+              disabled={busy}
+              title={t('settings.zoomIn')}
+              onClick={() => void onAdjustUiZoomLevel(0.5)}
+            >
+              <ZoomIn size={16} />
+            </button>
+            <button
+              type="button"
+              className="settings-page-size-btn"
+              disabled={busy || uiZoomLevel === 0}
+              title={t('settings.zoomReset')}
+              onClick={() => void onUiZoomLevelChange(0)}
+            >
+              <RotateCcw size={16} />
+              {t('settings.zoomReset')}
+            </button>
+          </div>
+        </section>
+
+        <section className="settings-section">
+          <h3>
+            <RefreshCw size={16} />
+            {t('updater.title')}
+          </h3>
+          <p className="settings-info-text">{t('updater.desc', { version: appVersion })}</p>
+          <button
+            type="button"
+            className="settings-btn"
+            disabled={busy || checkingUpdate}
+            onClick={() => void handleCheckUpdate()}
+          >
+            <RefreshCw size={16} className={checkingUpdate ? 'settings-icon-spin' : undefined} />
+            {checkingUpdate ? t('updater.checking') : t('updater.check')}
+          </button>
         </section>
 
         <section className="settings-section">

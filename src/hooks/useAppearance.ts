@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { AppLayoutMode, AppLocale, AppSettings, AppTheme } from '../config/appearance';
-import { DEFAULT_APP_SETTINGS } from '../config/appearance';
+import { DEFAULT_APP_SETTINGS, clampUiZoomLevel } from '../config/appearance';
 import type { ScrollBatchSize } from '../config/storage';
 
 function applyAppearance(theme: AppTheme, layout: AppLayoutMode, locale: AppLocale) {
@@ -70,17 +70,39 @@ export function useAppearance() {
     });
   }, []);
 
+  const setUiZoomLevel = useCallback(async (uiZoomLevel: number) => {
+    const clamped = clampUiZoomLevel(uiZoomLevel);
+    const level = (await window.electronAPI?.setUiZoomLevel(clamped)) ?? clamped;
+    setSettings((prev) => {
+      const next = { ...prev, uiZoomLevel: level };
+      void window.electronAPI?.saveSettings(next);
+      return next;
+    });
+  }, []);
+
+  const adjustUiZoomLevel = useCallback(async (delta: number) => {
+    const level = (await window.electronAPI?.adjustUiZoomLevel(delta)) ?? settings.uiZoomLevel;
+    setSettings((prev) => {
+      const next = { ...prev, uiZoomLevel: level };
+      void window.electronAPI?.saveSettings(next);
+      return next;
+    });
+  }, [settings.uiZoomLevel]);
+
   return {
     theme: settings.theme,
     layout: settings.layout,
     scrollBatchSize: settings.scrollBatchSize,
     locale: settings.locale,
     timeZone: settings.timeZone,
+    uiZoomLevel: settings.uiZoomLevel,
     setTheme,
     setLayout,
     setScrollBatchSize,
     setLocale,
     setTimeZone,
+    setUiZoomLevel,
+    adjustUiZoomLevel,
     setSettings: persist,
     ready,
   };

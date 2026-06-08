@@ -449,6 +449,18 @@
   color: var(--accent);
 }
 
+.settings-zoom-row {
+  align-items: center;
+}
+
+.settings-zoom-value {
+  min-width: 56px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
 .settings-page-size-row {
   display: flex;
   flex-wrap: wrap;
@@ -485,6 +497,16 @@
   background: var(--bg-surface);
   color: var(--text);
   font: inherit;
+}
+
+@keyframes settings-icon-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.settings-icon-spin {
+  animation: settings-icon-spin 0.8s linear infinite;
 }
 
 .settings-timezone-select:focus {

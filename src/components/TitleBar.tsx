@@ -1,4 +1,5 @@
 import { Minus, Square, X, Settings, PanelLeft } from 'lucide-react';
+import { useCallback } from 'react';
 import { APP_LOCALES, type AppLocale } from '../config/appearance';
 import { useI18n } from '../i18n/useI18n';
 import './TitleBar.css';
@@ -52,6 +53,18 @@ export function TitleBar({
   const { t } = useI18n();
   const showWindowControls = window.electronAPI?.platform === 'darwin';
 
+  const handleMinimize = useCallback(() => {
+    void window.electronAPI?.windowMinimize();
+  }, []);
+
+  const handleToggleMaximize = useCallback(() => {
+    void window.electronAPI?.windowToggleMaximize();
+  }, []);
+
+  const handleClose = useCallback(() => {
+    void window.electronAPI?.windowClose();
+  }, []);
+
   return (
     <div className="titlebar">
       <div className="titlebar-drag">
@@ -84,13 +97,28 @@ export function TitleBar({
         )}
         {showWindowControls && (
           <div className="titlebar-controls">
-            <button className="titlebar-btn" title="Minimize" type="button">
+            <button
+              className="titlebar-btn"
+              title={t('titleBar.minimize')}
+              type="button"
+              onClick={handleMinimize}
+            >
               <Minus size={14} />
             </button>
-            <button className="titlebar-btn" title="Maximize" type="button">
+            <button
+              className="titlebar-btn"
+              title={t('titleBar.maximize')}
+              type="button"
+              onClick={handleToggleMaximize}
+            >
               <Square size={12} />
             </button>
-            <button className="titlebar-btn titlebar-btn-close" title="Close" type="button">
+            <button
+              className="titlebar-btn titlebar-btn-close"
+              title={t('titleBar.close')}
+              type="button"
+              onClick={handleClose}
+            >
               <X size={14} />
             </button>
           </div>

@@ -1,11 +1,11 @@
 import { useState, useCallback, useEffect, memo, useRef } from 'react';
-import { Star, FolderOpen, PanelRightOpen, PanelRightClose, ArrowLeft, Pin, Download } from 'lucide-react';
+import { Star, PanelRightOpen, PanelRightClose, ArrowLeft, Pin, Download } from 'lucide-react';
 import type { Editor } from '@tiptap/react';
 import { PreviewProvider } from '../context/PreviewContext';
 import { RichEditor } from './RichEditor';
 import { NoteAssetsSidebar } from './NoteAssetsSidebar';
 import { NoteMetaPanel } from './NoteMetaPanel';
-import { getFolderPath } from '../hooks/useNotesStore';
+import { FolderPicker } from './FolderPicker';
 import type { Note, Folder, Tag, KanbanCard, KanbanGroup } from '../types';
 import type { SaveStatus } from '../hooks/useNotesStore';
 import type { ParsedNoteAsset } from '../utils/parseNoteAssets';
@@ -27,6 +27,7 @@ interface Props {
   onTogglePin: () => void;
   onToggleTag: (tagId: string) => void;
   onCreateTag: (name: string) => void;
+  onFolderChange: (folderId: string | null) => void;
   kanbanGroups: KanbanGroup[];
   linkedKanbanCards: KanbanCard[];
   onScheduledAtChange: (scheduledAt: number | null) => void;
@@ -61,6 +62,7 @@ export const NoteEditor = memo(function NoteEditor({
   onTogglePin,
   onToggleTag,
   onCreateTag,
+  onFolderChange,
   kanbanGroups,
   linkedKanbanCards,
   onScheduledAtChange,
@@ -74,7 +76,6 @@ export const NoteEditor = memo(function NoteEditor({
 }: Props) {
   const { t } = useI18n();
   const resolvedBackLabel = backLabel ?? t('noteEditor.back');
-  const folderPath = getFolderPath(folders, note.folderId);
   const [assetsOpen, setAssetsOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
   const [editor, setEditor] = useState<Editor | null>(null);
@@ -145,12 +146,12 @@ export const NoteEditor = memo(function NoteEditor({
               {saveStatusLabel(saveStatus, t)}
             </span>
           )}
-          {folderPath && (
-            <span className="note-editor-folder">
-              <FolderOpen size={14} />
-              {folderPath}
-            </span>
-          )}
+          <FolderPicker
+            folders={folders}
+            value={note.folderId}
+            onChange={onFolderChange}
+            className="note-editor-folder-picker"
+          />
           <button
             type="button"
             className={`note-panel-toggle ${assetsOpen ? 'active' : ''}`}

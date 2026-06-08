@@ -181,6 +181,12 @@ export type NoteExportResult =
   | { ok: true; path: string }
   | { ok: false; error: string };
 
+export type UpdaterCheckResult =
+  | { status: 'dev' }
+  | { status: 'not-available'; currentVersion: string }
+  | { status: 'available'; currentVersion: string; version: string }
+  | { status: 'error'; message: string };
+
 export interface ElectronAPI {
   platform: NodeJS.Platform;
   loadData: () => Promise<AppData>;
@@ -195,6 +201,25 @@ export interface ElectronAPI {
   readClipboardImage: () => Promise<string | null>;
   getSettings: () => Promise<AppSettings>;
   saveSettings: (settings: AppSettings) => Promise<boolean>;
+  getUiZoomLevel: () => Promise<number>;
+  setUiZoomLevel: (level: number) => Promise<number>;
+  adjustUiZoomLevel: (delta: number) => Promise<number>;
+  windowMinimize: () => Promise<void>;
+  windowToggleMaximize: () => Promise<boolean>;
+  windowClose: () => Promise<void>;
+  getAppVersion: () => Promise<string>;
+  checkForUpdates: () => Promise<UpdaterCheckResult>;
+  downloadUpdate: () => Promise<boolean>;
+  installUpdate: () => Promise<void>;
+  onUpdaterEvent: (
+    channel:
+      | 'updater:available'
+      | 'updater:not-available'
+      | 'updater:downloaded'
+      | 'updater:progress'
+      | 'updater:error',
+    callback: (payload: Record<string, unknown>) => void
+  ) => () => void;
   getStorageInfo: () => Promise<StorageInfo>;
   getFileInventory: () => Promise<StoredFileInventory>;
   openStorageFolder: (which: 'data' | 'images' | 'attachments') => Promise<boolean>;

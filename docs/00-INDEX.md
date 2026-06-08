@@ -53,7 +53,12 @@ Dokumentasi ini dirancang agar **agent AI dan developer** bisa bekerja tanpa mem
 | Tema & layout | ✅ | 14 tema, mode klasik / fokus |
 | Pintasan keyboard global | ✅ | Ctrl+N/F/,/Shift+P/E; panel di Pengaturan |
 | Ekspor catatan | ✅ | MD, PDF, HTML, TXT via IPC |
-| Hapus bulk catatan | ✅ | Mode pilih di daftar catatan |
+| Hapus bulk catatan | ✅ | Mode pilih di daftar catatan + konfirmasi |
+| Konfirmasi hapus (dialog) | ✅ | Catatan, folder, file backup — `ConfirmDialog` |
+| Pindah catatan ke folder | ✅ | Bulk & tunggal + `FolderPicker` hierarki |
+| Zoom UI | ✅ | Ctrl+/−/0 + Pengaturan |
+| Auto-update (GitHub) | ✅ | `electron-updater`; cek otomatis + manual di Pengaturan |
+| Ekspor PDF dengan gambar | ✅ | Inline `notes-image://` → data URL saat ekspor |
 | Virtual list (performa) | ✅ | `@tanstack/react-virtual` di NoteList |
 | Lazy load konten catatan | ✅ | Preview ringkas; muat penuh saat dibuka |
 | Migrasi skema DB | ✅ | Lihat [09-DB-MIGRATIONS.md](09-DB-MIGRATIONS.md) |

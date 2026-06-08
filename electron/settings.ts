@@ -1,10 +1,12 @@
 import fs from 'fs';
 import {
   DEFAULT_APP_SETTINGS,
+  clampUiZoomLevel,
   isAppLayout,
   isAppLocale,
   isAppTheme,
   isAppTimeZone,
+  isUiZoomLevel,
   type AppSettings,
 } from '../src/config/appearance';
 import { DEFAULT_SCROLL_BATCH_SIZE, isScrollBatchSize } from '../src/config/storage';
@@ -32,6 +34,9 @@ export function loadSettings(settingsPath: string): AppSettings {
       scrollBatchSize,
       locale: isAppLocale(raw.locale) ? raw.locale : DEFAULT_APP_SETTINGS.locale,
       timeZone: isAppTimeZone(raw.timeZone) ? raw.timeZone : DEFAULT_APP_SETTINGS.timeZone,
+      uiZoomLevel: isUiZoomLevel(raw.uiZoomLevel)
+        ? clampUiZoomLevel(raw.uiZoomLevel)
+        : DEFAULT_APP_SETTINGS.uiZoomLevel,
     };
   } catch {
     /* ignore */

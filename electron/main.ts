@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, dialog, protocol, clipboard, shell } from 'electron';
+import { app, BrowserWindow, ipcMain, dialog, protocol, clipboard, shell, type WebContents } from 'electron';
 import path from 'path';
 import fs from 'fs';
 import { Readable } from 'node:stream';
@@ -12,6 +12,7 @@ import {
   getLegacyJsonBackupPath,
 } from './backup';
 import { loadSettings, saveSettings, type AppSettings } from './settings';
+import { clampUiZoomLevel } from '../src/config/appearance';
 import { ATTACHMENT_FILTER, getExt, getFileKind, getMime as mimeFromName } from './fileTypes';
 import { previewOfficeHtml, listExcelSheetNames, previewExcelSheetHtml } from './officePreview';
 import {
@@ -44,6 +45,8 @@ import {
   saveAllData,
 } from './storage';
 import type { AppData, NoteExportFormat } from '../src/types';
+import { inlineStoredUrlsInHtml } from './exportHtml';
+import { setupAutoUpdater } from './updater';
 
 const USER_DATA = () => app.getPath('userData');
 const storagePaths = () => buildStoragePaths(USER_DATA());
@@ -223,6 +226,46 @@ function fileStreamResponse(filePath: string, contentType: string, inlineName?: 
   return new Response(body, { headers });
 }
 
+function applyWindowZoom(wc: WebContents, level: number): number {
+  const clamped = clampUiZoomLevel(level);
+  wc.setZoomLevel(clamped);
+  return clamped;
+}
+
+function persistZoomLevel(level: number) {
+  const settingsPath = SETTINGS_FILE();
+  const settings = loadSettings(settingsPath);
+  const clamped = clampUiZoomLevel(level);
+  if (settings.uiZoomLevel === clamped) return;
+  saveSettings(settingsPath, { ...settings, uiZoomLevel: clamped });
+}
+
+function registerZoomShortcuts(wc: WebContents) {
+  wc.on('before-input-event', (event, input) => {
+    if (input.type !== 'keyDown') return;
+    if (!(input.control || input.meta)) return;
+
+    const key = input.key;
+    if (key === '=' || key === '+' || key === 'Add') {
+      const next = applyWindowZoom(wc, wc.getZoomLevel() + 0.5);
+      persistZoomLevel(next);
+      event.preventDefault();
+      return;
+    }
+    if (key === '-' || key === 'Subtract' || key === '_') {
+      const next = applyWindowZoom(wc, wc.getZoomLevel() - 0.5);
+      persistZoomLevel(next);
+      event.preventDefault();
+      return;
+    }
+    if (key === '0') {
+      applyWindowZoom(wc, 0);
+      persistZoomLevel(0);
+      event.preventDefault();
+    }
+  });
+}
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1280,
@@ -243,6 +286,10 @@ function createWindow() {
   });
 
   const wc = mainWindow.webContents;
+
+  const initialZoom = loadSettings(SETTINGS_FILE()).uiZoomLevel ?? 0;
+  applyWindowZoom(wc, initialZoom);
+  registerZoomShortcuts(wc);
 
   wc.on('did-fail-load', (_event, code, description, url) => {
     console.error('[Notes] Gagal memuat halaman:', url, code, description);
@@ -340,6 +387,7 @@ app.whenReady().then(() => {
   });
 
   createWindow();
+  setupAutoUpdater(() => mainWindow);
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
@@ -602,31 +650,37 @@ ipcMain.handle(
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;');
+    const exportContent = inlineStoredUrlsInHtml(payload.content, storedPath);
 
     if (format === 'pdf') {
       const htmlDoc = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${escapedTitle}</title>
 <style>body{font-family:system-ui,sans-serif;line-height:1.5;padding:24px;max-width:720px;margin:0 auto;color:#111}
-h1{font-size:1.5rem;margin-bottom:1rem}img{max-width:100%}</style></head>
-<body><h1>${escapedTitle}</h1>${payload.content}</body></html>`;
+h1{font-size:1.5rem;margin-bottom:1rem}img{max-width:100%;height:auto}</style></head>
+<body><h1>${escapedTitle}</h1>${exportContent}</body></html>`;
       const pdfWin = new BrowserWindow({
         show: false,
-        webPreferences: { offscreen: true },
+        webPreferences: { offscreen: true, webSecurity: false },
       });
+      const tmpHtml = path.join(app.getPath('temp'), `notes-export-${Date.now()}.html`);
       try {
-        await pdfWin.loadURL(
-          `data:text/html;charset=utf-8,${encodeURIComponent(htmlDoc)}`
-        );
+        fs.writeFileSync(tmpHtml, htmlDoc, 'utf-8');
+        await pdfWin.loadFile(tmpHtml);
         const pdf = await pdfWin.webContents.printToPDF({ printBackground: true });
         fs.writeFileSync(result.filePath, pdf);
         return { ok: true as const, path: result.filePath };
       } finally {
         pdfWin.destroy();
+        try {
+          fs.unlinkSync(tmpHtml);
+        } catch {
+          /* ignore */
+        }
       }
     }
 
     let body: string;
     if (format === 'html') {
-      body = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${escapedTitle}</title></head><body><h1>${escapedTitle}</h1>${payload.content}</body></html>`;
+      body = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${escapedTitle}</title></head><body><h1>${escapedTitle}</h1>${exportContent}</body></html>`;
     } else if (format === 'md') {
       const text = payload.plainText.startsWith(`${title}\n\n`)
         ? payload.plainText.slice(title.length + 2)
@@ -655,8 +709,47 @@ ipcMain.handle('settings:load', () => loadSettings(SETTINGS_FILE()));
 ipcMain.handle('settings:save', (_e, settings: AppSettings) => {
   ensureDirs();
   saveSettings(SETTINGS_FILE(), settings);
+  if (mainWindow) {
+    applyWindowZoom(mainWindow.webContents, settings.uiZoomLevel ?? 0);
+  }
   return true;
 });
+
+ipcMain.handle('window:get-zoom', () => {
+  if (!mainWindow) return 0;
+  return mainWindow.webContents.getZoomLevel();
+});
+
+ipcMain.handle('window:set-zoom', (_e, level: number) => {
+  if (!mainWindow) return 0;
+  const next = applyWindowZoom(mainWindow.webContents, level);
+  persistZoomLevel(next);
+  return next;
+});
+
+ipcMain.handle('window:adjust-zoom', (_e, delta: number) => {
+  if (!mainWindow) return 0;
+  const next = applyWindowZoom(mainWindow.webContents, mainWindow.webContents.getZoomLevel() + delta);
+  persistZoomLevel(next);
+  return next;
+});
+
+ipcMain.handle('window:minimize', () => {
+  mainWindow?.minimize();
+});
+
+ipcMain.handle('window:toggle-maximize', () => {
+  if (!mainWindow) return false;
+  if (mainWindow.isMaximized()) mainWindow.unmaximize();
+  else mainWindow.maximize();
+  return mainWindow.isMaximized();
+});
+
+ipcMain.handle('window:close', () => {
+  mainWindow?.close();
+});
+
+ipcMain.handle('window:is-maximized', () => mainWindow?.isMaximized() ?? false);
 
 function dirFileStats(dir: string): { count: number; bytes: number } {
   let count = 0;

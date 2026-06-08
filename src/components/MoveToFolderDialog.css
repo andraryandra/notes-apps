@@ -1,0 +1,51 @@
+.move-folder-dialog {
+  width: min(420px, calc(100vw - 32px));
+  padding: 20px 22px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+}
+
+.move-folder-dialog h3 {
+  margin: 0 0 8px;
+  font-size: 18px;
+}
+
+.move-folder-desc {
+  margin: 0 0 14px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.move-folder-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.move-folder-cancel,
+.move-folder-apply {
+  padding: 8px 14px;
+  font-size: 13px;
+  border-radius: var(--radius-md);
+}
+
+.move-folder-cancel {
+  color: var(--text-secondary);
+}
+
+.move-folder-cancel:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.move-folder-apply {
+  background: var(--accent);
+  color: #fff;
+}
+
+.move-folder-apply:hover {
+  background: var(--accent-hover);
+}

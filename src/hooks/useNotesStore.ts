@@ -223,14 +223,32 @@ export function useNotesStore() {
           return [folderId, ...children.flatMap(collectIds)];
         };
         const ids = new Set(collectIds(id));
+        const noteIdsToDelete = new Set(
+          prev.notes.filter((n) => n.folderId && ids.has(n.folderId)).map((n) => n.id)
+        );
         return {
           ...prev,
           folders: prev.folders.filter((f) => !ids.has(f.id)),
-          notes: prev.notes.map((n) =>
-            n.folderId && ids.has(n.folderId) ? { ...n, folderId: null } : n
+          notes: prev.notes.filter((n) => !noteIdsToDelete.has(n.id)),
+          todos: prev.todos.map((t) =>
+            t.noteId && noteIdsToDelete.has(t.noteId) ? { ...t, noteId: null } : t
           ),
         };
       });
+    },
+    [persist]
+  );
+
+  const moveNotesToFolder = useCallback(
+    (noteIds: string[], folderId: string | null) => {
+      if (noteIds.length === 0) return;
+      const idSet = new Set(noteIds);
+      persist((prev) => ({
+        ...prev,
+        notes: prev.notes.map((n) =>
+          idSet.has(n.id) ? { ...n, folderId, updatedAt: Date.now() } : n
+        ),
+      }));
     },
     [persist]
   );
@@ -649,6 +667,7 @@ export function useNotesStore() {
     updateNote,
     deleteNote,
     deleteNotes,
+    moveNotesToFolder,
     toggleFavorite,
     togglePin,
     createTag,

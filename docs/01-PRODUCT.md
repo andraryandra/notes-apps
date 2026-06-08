@@ -19,7 +19,8 @@
 - Folder disimpan datar dengan `parentId`.
 - UI menampilkan pohon expandable.
 - Aksi: buat root, buat subfolder (+ di baris folder), rename (double-click atau menu), hapus (beserta semua subfolder).
-- Saat folder dihapus, catatan di dalamnya dipindah ke **tanpa folder** (`folderId: null`), tidak dihapus.
+- Saat folder dihapus, **catatan di dalam folder dan subfoldernya ikut dihapus** (konfirmasi dialog).
+- **Pindah catatan ke folder** dari daftar catatan, menu konteks, atau editor (bulk & tunggal).
 
 ### 2. Tags
 
@@ -66,7 +67,9 @@ Konten disimpan sebagai **HTML string** di `note.content`.
 - Diurutkan: **pin dulu**, lalu `updatedAt` terbaru.
 - Preview teks polos (`contentPreview` dari DB, lazy load konten penuh).
 - Tampilkan path folder, tag chips, jadwal, jumlah TODO terkait.
-- **Hapus bulk:** mode pilih (checkbox) → hapus banyak sekaligus.
+- **Hapus bulk:** mode pilih (checkbox) → hapus banyak sekaligus (dengan konfirmasi).
+- **Hapus tunggal:** tombol hapus / menu konteks → konfirmasi dialog.
+- **Pindah ke folder:** mode pilih atau menu konteks → dialog pemilih folder hierarki.
 - Virtual scroll (`@tanstack/react-virtual`) untuk performa daftar panjang.
 
 ### 7. Kanban / TODO
@@ -97,9 +100,15 @@ Konten disimpan sebagai **HTML string** di `note.content`.
 
 - **Tema:** 14 pilihan warna.
 - **Layout:** klasik (3 kolom) atau fokus (editor penuh + drawer daftar).
+- **Zoom UI:** perbesar/perkecil tampilan (Ctrl+/−/0 atau panel Pengaturan).
 - **Infinite scroll:** batch size daftar.
 - **Pintasan keyboard:** tabel referensi.
 - **Penyimpanan:** info DB, kelola file gambar/lampiran, backup & restore.
+- **Pembaruan:** cek update dari GitHub Releases (aplikasi terpasang).
+
+### 12. Dialog konfirmasi
+
+- Aksi destruktif (hapus catatan, folder, file backup, dll.) memakai dialog modal modern (Ya/Tidak), bukan `window.confirm`.
 
 ## Pintasan keyboard (global)
 
@@ -110,6 +119,7 @@ Konten disimpan sebagai **HTML string** di `note.content`.
 | Ctrl+, | Buka pengaturan |
 | Ctrl+Shift+P | Pin / lepas pin catatan aktif |
 | Ctrl+Shift+E | Ekspor catatan aktif (Markdown) |
+| Ctrl + / Ctrl − / Ctrl+0 | Perbesar / perkecil / reset zoom UI |
 | Esc | Tutup pengaturan / drawer daftar |
 
 Di macOS gunakan **Cmd** sebagai pengganti Ctrl. Daftar lengkap di Pengaturan.
@@ -213,9 +223,9 @@ Editor memenuhi layar; daftar catatan jadi drawer (toggle dari title bar).
 
 - Tidak ada sinkronisasi cloud / multi-device.
 - Tidak ada enkripsi catatan.
-- Gambar `notes-image://` mungkin belum tampil sempurna di ekspor PDF.
-- Tidak ada undo history global.
-- Titlebar window controls belum terhubung ke Electron (dekoratif).
+- Tidak ada undo history global / tempat sampah.
+- Titlebar kustom (minimize/maximize/close) hanya di macOS; Linux/Windows memakai dekorasi window native.
+- Auto-update membutuhkan release via GitHub dengan manifest `latest*.yml` (electron-builder `--publish`).
 
 ## Glosarium
 

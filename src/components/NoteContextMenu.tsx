@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Star, Trash2, Pin } from 'lucide-react';
+import { Star, Trash2, Pin, FolderInput } from 'lucide-react';
 import { useI18n } from '../i18n/useI18n';
 import './NoteContextMenu.css';
 
@@ -17,9 +17,17 @@ interface Props {
   onToggleFavorite: (noteId: string) => void;
   onTogglePin: (noteId: string) => void;
   onDelete: (noteId: string) => void;
+  onMoveToFolder?: (noteId: string) => void;
 }
 
-export function NoteContextMenu({ menu, onClose, onToggleFavorite, onTogglePin, onDelete }: Props) {
+export function NoteContextMenu({
+  menu,
+  onClose,
+  onToggleFavorite,
+  onTogglePin,
+  onDelete,
+  onMoveToFolder,
+}: Props) {
   const { t } = useI18n();
 
   useEffect(() => {
@@ -62,6 +70,18 @@ export function NoteContextMenu({ menu, onClose, onToggleFavorite, onTogglePin, 
         <Star size={16} fill={menu.favorite ? 'currentColor' : 'none'} />
         {menu.favorite ? t('noteContextMenu.removeFavorite') : t('noteContextMenu.addFavorite')}
       </button>
+      {onMoveToFolder && (
+        <button
+          type="button"
+          onClick={() => {
+            onMoveToFolder(menu.noteId);
+            onClose();
+          }}
+        >
+          <FolderInput size={16} />
+          {t('noteContextMenu.moveToFolder')}
+        </button>
+      )}
       <button
         type="button"
         className="note-context-menu-danger"

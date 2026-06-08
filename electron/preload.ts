@@ -33,6 +33,26 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getSettings: (): Promise<AppSettings> => ipcRenderer.invoke('settings:load'),
   saveSettings: (settings: AppSettings): Promise<boolean> =>
     ipcRenderer.invoke('settings:save', settings),
+  getUiZoomLevel: (): Promise<number> => ipcRenderer.invoke('window:get-zoom'),
+  setUiZoomLevel: (level: number): Promise<number> => ipcRenderer.invoke('window:set-zoom', level),
+  adjustUiZoomLevel: (delta: number): Promise<number> =>
+    ipcRenderer.invoke('window:adjust-zoom', delta),
+  windowMinimize: (): Promise<void> => ipcRenderer.invoke('window:minimize'),
+  windowToggleMaximize: (): Promise<boolean> => ipcRenderer.invoke('window:toggle-maximize'),
+  windowClose: (): Promise<void> => ipcRenderer.invoke('window:close'),
+  getAppVersion: (): Promise<string> => ipcRenderer.invoke('app:getVersion'),
+  checkForUpdates: (): Promise<import('../src/types').UpdaterCheckResult> =>
+    ipcRenderer.invoke('updater:check'),
+  downloadUpdate: (): Promise<boolean> => ipcRenderer.invoke('updater:download'),
+  installUpdate: (): Promise<void> => ipcRenderer.invoke('updater:install'),
+  onUpdaterEvent: (channel, callback) => {
+    const handler = (_: Electron.IpcRendererEvent, payload: Record<string, unknown>) =>
+      callback(payload);
+    ipcRenderer.on(channel, handler);
+    return () => {
+      ipcRenderer.removeListener(channel, handler);
+    };
+  },
   getStorageInfo: (): Promise<StorageInfo> => ipcRenderer.invoke('storage:getInfo'),
   getFileInventory: (): Promise<StoredFileInventory> =>
     ipcRenderer.invoke('storage:getFileInventory'),

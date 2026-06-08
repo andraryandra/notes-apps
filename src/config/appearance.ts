@@ -49,7 +49,13 @@ export interface AppSettings {
   locale: AppLocale;
   /** Zona waktu IANA untuk tampilan tanggal (data disimpan UTC / Unix ms) */
   timeZone: string;
+  /** Level zoom Electron (0 = 100%, negatif = lebih kecil) */
+  uiZoomLevel: number;
 }
+
+export const MIN_UI_ZOOM_LEVEL = -5;
+export const MAX_UI_ZOOM_LEVEL = 5;
+export const DEFAULT_UI_ZOOM_LEVEL = 0;
 
 export const DEFAULT_APP_SETTINGS: AppSettings = {
   theme: 'dark',
@@ -57,6 +63,7 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   scrollBatchSize: DEFAULT_SCROLL_BATCH_SIZE,
   locale: 'id',
   timeZone: detectSystemTimeZone(),
+  uiZoomLevel: DEFAULT_UI_ZOOM_LEVEL,
 };
 
 export function isAppTheme(value: unknown): value is AppTheme {
@@ -73,6 +80,18 @@ export function isAppLocale(value: unknown): value is AppLocale {
 
 export function isAppTimeZone(value: unknown): value is string {
   return isValidTimeZone(value);
+}
+
+export function clampUiZoomLevel(value: number): number {
+  return Math.max(MIN_UI_ZOOM_LEVEL, Math.min(MAX_UI_ZOOM_LEVEL, value));
+}
+
+export function isUiZoomLevel(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value);
+}
+
+export function uiZoomPercent(level: number): number {
+  return Math.round(Math.pow(1.2, clampUiZoomLevel(level)) * 100);
 }
 
 export const THEME_OPTIONS: {

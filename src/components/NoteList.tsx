@@ -8,14 +8,16 @@ import {
   type MouseEvent,
 } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { Plus, Star, Trash2, CheckSquare, Square, X, Pin } from 'lucide-react';
+import { Plus, Star, Trash2, CheckSquare, Square, X, Pin, FolderInput } from 'lucide-react';
 import { stripHtml, getFolderPath } from '../hooks/useNotesStore';
 import { useListScrollClass } from '../hooks/useListScrollClass';
 import { sortNotesForList } from '../utils/exportNote';
 import { NoteTagChips } from './NoteTagChips';
 import { NoteMetaTokens } from './NoteMetaTokens';
 import { NoteContextMenu, type NoteContextMenuState } from './NoteContextMenu';
+import { MoveToFolderDialog } from './MoveToFolderDialog';
 import { useI18n } from '../i18n/useI18n';
+import { useConfirm } from '../hooks/useConfirm';
 import { useDateTime } from '../hooks/useDateTime';
 import type { Note, Folder, Tag, KanbanCard } from '../types';
 import './NoteList.css';
@@ -30,6 +32,7 @@ interface Props {
   onCreate: () => void;
   onDelete: (id: string) => void;
   onDeleteMany: (ids: string[]) => void;
+  onMoveMany: (ids: string[], folderId: string | null) => void;
   onToggleFavorite: (id: string) => void;
   onTogglePin: (id: string) => void;
   listTitle: string;
@@ -165,16 +168,20 @@ const NoteListInner = memo(function NoteListInner({
   onCreate,
   onDelete,
   onDeleteMany,
+  onMoveMany,
   onToggleFavorite,
   onTogglePin,
   listTitle,
   panelClassName,
 }: Props) {
   const { t } = useI18n();
+  const { confirm } = useConfirm();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [contextMenu, setContextMenu] = useState<NoteContextMenuState | null>(null);
   const [selectMode, setSelectMode] = useState(false);
   const [checkedIds, setCheckedIds] = useState<Set<string>>(() => new Set());
+  const [moveDialogOpen, setMoveDialogOpen] = useState(false);
+  const [moveNoteIds, setMoveNoteIds] = useState<string[]>([]);
 
   useListScrollClass(scrollRef, '.app-body', 'is-list-scrolling');
 
@@ -262,17 +269,37 @@ const NoteListInner = memo(function NoteListInner({
     setCheckedIds(allChecked ? new Set() : new Set(sortedIds));
   }, [allChecked, sortedIds]);
 
-  const handleBulkDelete = useCallback(() => {
+  const handleBulkDelete = useCallback(async () => {
     const ids = [...checkedIds];
     if (ids.length === 0) return;
     const label =
       ids.length === 1 ? t('common.noteOne') : t('common.notesCount', { count: ids.length });
-    if (!window.confirm(t('noteList.bulkDeleteConfirm', { label }))) {
-      return;
-    }
+    const ok = await confirm({
+      title: t('noteList.deleteTitle'),
+      message: t('noteList.bulkDeleteConfirm', { label }),
+      confirmLabel: t('common.delete'),
+      variant: 'danger',
+    });
+    if (!ok) return;
     onDeleteMany(ids);
     exitSelectMode();
-  }, [checkedIds, onDeleteMany, exitSelectMode, t]);
+  }, [checkedIds, onDeleteMany, exitSelectMode, t, confirm]);
+
+  const openMoveDialog = useCallback((ids: string[]) => {
+    if (ids.length === 0) return;
+    setMoveNoteIds(ids);
+    setMoveDialogOpen(true);
+  }, []);
+
+  const handleMoveConfirm = useCallback(
+    (folderId: string | null) => {
+      onMoveMany(moveNoteIds, folderId);
+      setMoveDialogOpen(false);
+      setMoveNoteIds([]);
+      exitSelectMode();
+    },
+    [moveNoteIds, onMoveMany, exitSelectMode]
+  );
 
   const handleContextMenu = useCallback(
     (e: MouseEvent, noteId: string, favorite: boolean, pinned: boolean) => {
@@ -308,6 +335,15 @@ const NoteListInner = memo(function NoteListInner({
                 title={allChecked ? t('noteList.deselectAllTitle') : t('noteList.selectAllTitle')}
               >
                 {allChecked ? t('noteList.deselectAll') : t('noteList.selectAll')}
+              </button>
+              <button
+                type="button"
+                className="note-list-icon-btn"
+                disabled={!someChecked}
+                onClick={() => openMoveDialog([...checkedIds])}
+                title={t('noteList.moveSelected')}
+              >
+                <FolderInput size={16} />
               </button>
               <button
                 type="button"
@@ -401,6 +437,17 @@ const NoteListInner = memo(function NoteListInner({
         onToggleFavorite={onToggleFavorite}
         onTogglePin={onTogglePin}
         onDelete={onDelete}
+        onMoveToFolder={(noteId) => openMoveDialog([noteId])}
+      />
+      <MoveToFolderDialog
+        open={moveDialogOpen}
+        folders={folders}
+        noteCount={moveNoteIds.length}
+        onConfirm={handleMoveConfirm}
+        onClose={() => {
+          setMoveDialogOpen(false);
+          setMoveNoteIds([]);
+        }}
       />
     </div>
   );

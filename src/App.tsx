@@ -11,9 +11,11 @@ import { ScheduleListPanel } from './components/ScheduleListPanel';
 import { DashboardPanel } from './components/DashboardPanel';
 import { CheckSquare } from 'lucide-react';
 import { useNotesStore, stripHtml } from './hooks/useNotesStore';
+import { collectFolderDescendantIds, countNotesInFolderSet } from './utils/folderOptions';
 import { noteMatchesQuery } from './utils/noteSearch';
 import { useAppearance } from './hooks/useAppearance';
 import { I18nProvider } from './i18n/I18nProvider';
+import { ConfirmProvider } from './context/ConfirmContext';
 import { useI18n } from './i18n/useI18n';
 import { SettingsModal } from './components/SettingsModal';
 import { GlobalAssetsPanel } from './components/GlobalAssetsPanel';
@@ -21,10 +23,12 @@ import { parseGlobalNoteAssets } from './utils/parseGlobalNoteAssets';
 import type { ParsedNoteAsset } from './utils/parseNoteAssets';
 import type { SidebarView } from './types';
 import { useGlobalShortcuts } from './hooks/useGlobalShortcuts';
+import { useAppUpdater } from './hooks/useAppUpdater';
 import { exportNoteFile } from './utils/exportNote';
 import { createTranslator } from './i18n/translator';
 import type { AppLocale } from './config/appearance';
 import { useToast } from './hooks/useToast';
+import { useConfirm } from './hooks/useConfirm';
 import { useDateTime } from './hooks/useDateTime';
 import {
   getKanbanColumnDisplayName,
@@ -82,7 +86,9 @@ export default function App() {
   const appearance = useAppearance();
   return (
     <I18nProvider locale={appearance.locale} timeZone={appearance.timeZone}>
-      <AppContent appearance={appearance} />
+      <ConfirmProvider>
+        <AppContent appearance={appearance} />
+      </ConfirmProvider>
     </I18nProvider>
   );
 }
@@ -96,6 +102,8 @@ function AppContent({
   const dt = useDateTime();
   const store = useNotesStore();
   const { showSuccess } = useToast();
+  const { confirm } = useConfirm();
+  const { checkForUpdates } = useAppUpdater({ confirm, showSuccess, t });
   const {
     theme,
     layout,
@@ -107,6 +115,9 @@ function AppContent({
     setScrollBatchSize,
     setLocale,
     setTimeZone,
+    uiZoomLevel,
+    setUiZoomLevel,
+    adjustUiZoomLevel,
     ready,
   } = appearance;
   const [noteListDrawerOpen, setNoteListDrawerOpen] = useState(false);
@@ -392,12 +403,21 @@ function AppContent({
   );
 
   const handleDeleteNote = useCallback(
-    (id: string) => {
+    async (id: string) => {
+      const note = data.notes.find((n) => n.id === id);
+      const title = note?.title?.trim() || t('noteList.untitled');
+      const ok = await confirm({
+        title: t('noteList.deleteTitle'),
+        message: t('noteList.deleteConfirm', { title }),
+        confirmLabel: t('common.delete'),
+        variant: 'danger',
+      });
+      if (!ok) return;
       store.deleteNote(id);
       if (selectedNoteId === id) setSelectedNoteId(null);
       showSuccess(t('app.toast.noteDeleted'));
     },
-    [store, selectedNoteId, showSuccess, t]
+    [data.notes, store, selectedNoteId, showSuccess, t, confirm]
   );
 
   const handleDeleteNotes = useCallback(
@@ -412,6 +432,57 @@ function AppContent({
       );
     },
     [store, selectedNoteId, showSuccess, t]
+  );
+
+  const handleMoveNotes = useCallback(
+    (ids: string[], folderId: string | null) => {
+      if (ids.length === 0) return;
+      store.moveNotesToFolder(ids, folderId);
+      showSuccess(
+        ids.length === 1
+          ? t('app.toast.noteMoved')
+          : t('app.toast.notesMoved', { count: ids.length })
+      );
+    },
+    [store, showSuccess, t]
+  );
+
+  const handleDeleteFolder = useCallback(
+    async (folderId: string) => {
+      const folderIds = collectFolderDescendantIds(data.folders, folderId);
+      const noteCount = countNotesInFolderSet(data.notes, folderIds);
+      const folder = data.folders.find((f) => f.id === folderId);
+      const folderName = folder?.name ?? t('common.folder');
+
+      const ok = await confirm({
+        title: t('folderTree.deleteTitle'),
+        message:
+          noteCount > 0
+            ? t('folderTree.deleteConfirmWithNotes', { name: folderName, count: noteCount })
+            : t('folderTree.deleteConfirm', { name: folderName }),
+        confirmLabel: t('common.delete'),
+        variant: 'danger',
+      });
+      if (!ok) return;
+
+      const noteIdsToDelete = data.notes
+        .filter((n) => n.folderId && folderIds.has(n.folderId))
+        .map((n) => n.id);
+      store.deleteFolder(folderId);
+      if (selectedNoteId && noteIdsToDelete.includes(selectedNoteId)) {
+        setSelectedNoteId(null);
+      }
+      if (selectedFolderId && folderIds.has(selectedFolderId)) {
+        setSelectedFolderId(null);
+        setSidebarView('all');
+      }
+      showSuccess(
+        noteCount > 0
+          ? t('app.toast.folderDeletedWithNotes', { count: noteCount })
+          : t('app.toast.folderDeleted')
+      );
+    },
+    [data.folders, data.notes, store, selectedNoteId, selectedFolderId, showSuccess, t, confirm]
   );
 
   useGlobalShortcuts({
@@ -482,7 +553,7 @@ function AppContent({
           onViewChange={handleViewChange}
           onCreateFolder={(parentId) => setModal({ type: 'folder', parentId })}
           onRenameFolder={store.renameFolder}
-          onDeleteFolder={store.deleteFolder}
+          onDeleteFolder={handleDeleteFolder}
           onCreateTag={() => setModal({ type: 'tag' })}
           onDeleteTag={store.deleteTag}
           noteCounts={{
@@ -614,6 +685,7 @@ function AppContent({
             onCreate={handleCreateNote}
             onDelete={handleDeleteNote}
             onDeleteMany={handleDeleteNotes}
+            onMoveMany={handleMoveNotes}
             onToggleFavorite={handleToggleFavorite}
             onTogglePin={handleTogglePin}
             listTitle={listTitle}
@@ -638,6 +710,7 @@ function AppContent({
               const tag = store.createTag(name);
               store.toggleNoteTag(selectedNote.id, tag.id);
             }}
+            onFolderChange={(folderId) => store.updateNote(selectedNote.id, { folderId })}
             onScheduledAtChange={(scheduledAt) =>
               store.updateNote(selectedNote.id, { scheduledAt })
             }
@@ -726,11 +799,15 @@ function AppContent({
           scrollBatchSize={scrollBatchSize}
           locale={locale}
           timeZone={timeZone}
+          uiZoomLevel={uiZoomLevel}
           onThemeChange={setTheme}
           onLayoutChange={setLayout}
           onScrollBatchSizeChange={setScrollBatchSize}
           onLocaleChange={setLocale}
           onTimeZoneChange={setTimeZone}
+          onUiZoomLevelChange={setUiZoomLevel}
+          onAdjustUiZoomLevel={adjustUiZoomLevel}
+          onCheckForUpdates={checkForUpdates}
           onClose={() => setShowSettings(false)}
           onRestoreComplete={async () => {
             const s = await window.electronAPI.getSettings();
@@ -738,6 +815,7 @@ function AppContent({
             await setLayout(s.layout);
             await setLocale(s.locale);
             await setTimeZone(s.timeZone);
+            await setUiZoomLevel(s.uiZoomLevel ?? 0);
             await store.reload();
             setSelectedNoteId(null);
             setSelectedKanbanGroupId(null);
