@@ -75,7 +75,15 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build and publish
-        run: npm run icons && vite build && npx electron-builder --${{ matrix.platform }} --publish always
+      - name: Verify icon
+        shell: bash
+        run: test -f build/icon.png
+
+      - name: Build renderer + Electron
+        run: npm run build:bundle
+
+      - name: Package and publish
+        run: npx electron-builder --${{ matrix.platform }} --publish always
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
