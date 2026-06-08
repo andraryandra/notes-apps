@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/andraryandra/notes-apps/compare/v1.1.0...v1.2.0) (2026-06-08)
+
+
+### Features
+
+* implement table toolbar panel and enhance table styling options ([6129c17](https://github.com/andraryandra/notes-apps/commit/6129c17ca180220fea276001f2d484cffe84a70b))
+
 ## [1.1.0](https://github.com/andraryandra/notes-apps/compare/v1.0.0...v1.1.0) (2026-06-08)
 
 
