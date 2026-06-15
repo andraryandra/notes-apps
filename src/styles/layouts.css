@@ -42,10 +42,9 @@
   min-height: 0;
 }
 
-/* Saat scroll daftar catatan: jangan repaint editor TipTap (berat di layar besar) */
+/* Saat scroll daftar catatan: kurangi interaksi editor (tanpa content-visibility agar TipTap tetap ter-render) */
 .app-body.is-list-scrolling .note-editor-wrap {
-  content-visibility: hidden;
-  contain: layout paint;
+  pointer-events: none;
 }
 
 .app.is-settings-open .app-body {

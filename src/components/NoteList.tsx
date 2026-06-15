@@ -10,6 +10,7 @@ import {
 import { Plus, Star, Trash2, CheckSquare, Square, X, Pin, FolderInput } from 'lucide-react';
 import { stripHtml, getFolderPath } from '../hooks/useNotesStore';
 import { useListScrollClass } from '../hooks/useListScrollClass';
+import { useStaggerList } from '../hooks/useStaggerList';
 import { sortNotesForList } from '../utils/exportNote';
 import { NoteTagChips } from './NoteTagChips';
 import { NoteMetaTokens } from './NoteMetaTokens';
@@ -176,6 +177,7 @@ const NoteListInner = memo(function NoteListInner({
   const { t } = useI18n();
   const { confirm } = useConfirm();
   const scrollRef = useRef<HTMLDivElement>(null);
+  const itemsRef = useRef<HTMLDivElement>(null);
   const [contextMenu, setContextMenu] = useState<NoteContextMenuState | null>(null);
   const [selectMode, setSelectMode] = useState(false);
   const [checkedIds, setCheckedIds] = useState<Set<string>>(() => new Set());
@@ -186,6 +188,9 @@ const NoteListInner = memo(function NoteListInner({
 
   const sorted = useMemo(() => sortNotesForList(notes), [notes]);
   const sortedIds = useMemo(() => sorted.map((n) => n.id), [sorted]);
+
+  const staggerKey = `${listTitle}-${sortedIds.join(',')}`;
+  useStaggerList(staggerKey, itemsRef, '.note-list-row', 28, 'listItem');
 
   useEffect(() => {
     setCheckedIds((prev) => {
@@ -386,7 +391,7 @@ const NoteListInner = memo(function NoteListInner({
             </button>
           </div>
         ) : (
-          <div className="note-list-items">
+          <div className="note-list-items" ref={itemsRef}>
             {sorted.map((note) => {
               const meta = cardMetaById.get(note.id)!;
               return (

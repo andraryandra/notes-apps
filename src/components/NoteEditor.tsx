@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, memo, useRef } from 'react';
-import { Star, PanelRightOpen, PanelRightClose, ArrowLeft, Pin, Download } from 'lucide-react';
+import { Star, PanelRightOpen, PanelRightClose, PanelLeftOpen, PanelLeftClose, ArrowLeft, Pin, Download } from 'lucide-react';
 import type { Editor } from '@tiptap/react';
 import { PreviewProvider } from '../context/PreviewContext';
 import { RichEditor } from './RichEditor';
@@ -38,6 +38,7 @@ interface Props {
   onAssetScrolled?: () => void;
   onBack?: () => void;
   backLabel?: string;
+  schedulePanelToggle?: { open: boolean; onToggle: () => void };
 }
 
 function saveStatusLabel(status: SaveStatus, t: (key: string) => string): string | null {
@@ -73,6 +74,7 @@ export const NoteEditor = memo(function NoteEditor({
   onAssetScrolled,
   onBack,
   backLabel,
+  schedulePanelToggle,
 }: Props) {
   const { t } = useI18n();
   const resolvedBackLabel = backLabel ?? t('noteEditor.back');
@@ -127,6 +129,21 @@ export const NoteEditor = memo(function NoteEditor({
     <div className="note-editor-wrap">
     <main className="note-editor">
       <header className="note-editor-header">
+        {schedulePanelToggle && (
+          <button
+            type="button"
+            className={`note-editor-schedule-toggle ${schedulePanelToggle.open ? 'active' : ''}`}
+            onClick={schedulePanelToggle.onToggle}
+            title={
+              schedulePanelToggle.open ? t('schedule.hidePanel') : t('schedule.showPanel')
+            }
+            aria-label={
+              schedulePanelToggle.open ? t('schedule.hidePanel') : t('schedule.showPanel')
+            }
+          >
+            {schedulePanelToggle.open ? <PanelLeftClose size={18} /> : <PanelLeftOpen size={18} />}
+          </button>
+        )}
         {onBack && (
           <button type="button" className="note-editor-back" onClick={onBack} title={resolvedBackLabel}>
             <ArrowLeft size={18} />

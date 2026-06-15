@@ -1,8 +1,10 @@
+import { useEffect, useRef } from 'react';
 import { Star, FileText, Tag, Plus, LayoutGrid, CheckSquare, Calendar, LayoutDashboard, PanelLeftClose } from 'lucide-react';
 import { GlobalSearch } from './GlobalSearch';
 import { FolderTree } from './FolderTree';
 import { KanbanTree } from './KanbanTree';
 import { useI18n } from '../i18n/useI18n';
+import { motionEnter } from '../utils/motion';
 import type { SidebarProps } from './sidebarTypes';
 import './Sidebar.css';
 
@@ -39,12 +41,20 @@ export function SidebarExpanded({
   onCollapse,
 }: Props) {
   const { t } = useI18n();
+  const navRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const nav = navRef.current;
+    if (!nav) return;
+    const active = nav.querySelector<HTMLElement>('.nav-item.active');
+    if (active) motionEnter('navSpring', active);
+  }, [sidebarView]);
 
   return (
     <aside className="sidebar sidebar--expanded">
       <GlobalSearch value={searchQuery} onChange={onSearchChange} />
 
-      <nav className="sidebar-nav">
+      <nav ref={navRef} className="sidebar-nav">
         <button
           type="button"
           className={`nav-item ${sidebarView === 'dashboard' ? 'active' : ''}`}

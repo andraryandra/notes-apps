@@ -417,6 +417,8 @@ export const en: TranslationTree = {
     badgeNoteShort: 'Note',
     badgeTodoShort: 'TODO',
     pageRange: '{{start}}–{{end}} of {{total}}',
+    showPanel: 'Show schedule',
+    hidePanel: 'Hide schedule',
   },
   kanban: {
     save: 'Save',
@@ -430,6 +432,8 @@ export const en: TranslationTree = {
     addCard: 'Add card',
     cancel: 'Cancel',
     deleteCard: 'Delete card',
+    dragCard: 'Drag card to another column',
+    dragColumn: 'Drag to reorder column',
     colTodo: 'To do',
     colDoing: 'In progress',
     colDone: 'Done',
@@ -591,6 +595,8 @@ export const en: TranslationTree = {
       mint: { label: 'Mint', desc: 'Fresh mint green' },
       paper: { label: 'Paper', desc: 'Cream paper tone' },
       graphite: { label: 'Graphite', desc: 'Minimal light gray' },
+      cyberpunk: { label: 'Cyberpunk', desc: 'Subtle dark neon cyan' },
+      cyberday: { label: 'Cyberpunk Light', desc: 'Soft bright neon' },
     },
   },
 };

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import type { AppLayoutMode, AppLocale, AppSettings, AppTheme, SidebarMode } from '../config/appearance';
 import { DEFAULT_APP_SETTINGS, clampUiZoomLevel } from '../config/appearance';
 import type { ScrollBatchSize } from '../config/storage';
+import { animateSidebarWidth, animateThemeChange } from '../utils/motion';
 
 function applyAppearance(theme: AppTheme, layout: AppLayoutMode, locale: AppLocale, sidebarMode: SidebarMode) {
   document.documentElement.setAttribute('data-theme', theme);
@@ -30,9 +31,13 @@ export function useAppearance() {
 
   const setTheme = useCallback(async (theme: AppTheme) => {
     setSettings((prev) => {
+      if (prev.theme === theme) return prev;
       const next = { ...prev, theme };
-      applyAppearance(next.theme, next.layout, next.locale, next.sidebarMode);
-      void window.electronAPI?.saveSettings(next);
+      void animateThemeChange(() => {
+        applyAppearance(next.theme, next.layout, next.locale, next.sidebarMode);
+      }).then(() => {
+        void window.electronAPI?.saveSettings(next);
+      });
       return next;
     });
   }, []);
@@ -92,8 +97,16 @@ export function useAppearance() {
 
   const setSidebarMode = useCallback(async (sidebarMode: SidebarMode) => {
     setSettings((prev) => {
+      if (prev.sidebarMode === sidebarMode) return prev;
+
+      const root = document.documentElement;
+      const current =
+        parseFloat(getComputedStyle(root).getPropertyValue('--sidebar-width')) || 260;
+      root.style.setProperty('--sidebar-width', `${current}px`);
+
       const next = { ...prev, sidebarMode };
       applyAppearance(next.theme, next.layout, next.locale, next.sidebarMode);
+      void animateSidebarWidth(next.layout, sidebarMode);
       void window.electronAPI?.saveSettings(next);
       return next;
     });

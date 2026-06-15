@@ -8,9 +8,45 @@
   border-right: 1px solid var(--border);
 }
 
+.schedule-workspace {
+  flex-direction: row;
+  overflow: hidden;
+}
+
+.schedule-workspace > .schedule-panel {
+  flex-shrink: 0;
+}
+
+.schedule-workspace > .schedule-list-panel {
+  flex: 1;
+  min-width: 0;
+}
+
+.schedule-drawer-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 25;
+  background: rgba(0, 0, 0, 0.35);
+  border: none;
+  cursor: default;
+}
+
+.view-transition.schedule-workspace--drawer {
+  position: absolute;
+  left: var(--sidebar-width);
+  top: 0;
+  bottom: 0;
+  z-index: 30;
+  flex: none;
+  width: auto;
+  max-width: min(400px, 38vw);
+  box-shadow: 8px 0 32px rgba(0, 0, 0, 0.22);
+}
+
 .schedule-panel--calendar {
-  width: min(400px, 36vw);
-  min-width: 320px;
+  width: min(360px, 32vw);
+  min-width: 300px;
+  max-width: 400px;
 }
 
 .schedule-panel-header {

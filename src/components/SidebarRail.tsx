@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Star,
   FileText,
@@ -19,6 +19,7 @@ import { KanbanTree } from './KanbanTree';
 import { SidebarTooltip } from './SidebarTooltip';
 import { SidebarFlyout } from './SidebarFlyout';
 import { useI18n } from '../i18n/useI18n';
+import { staggerIn, motionEnter } from '../utils/motion';
 import type { SidebarProps } from './sidebarTypes';
 import './Sidebar.css';
 
@@ -60,6 +61,18 @@ export function SidebarRail(props: Props) {
 
   const { t } = useI18n();
   const [flyout, setFlyout] = useState<FlyoutPanel>(null);
+  const railRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    if (railRef.current) staggerIn(railRef.current, '.sidebar-rail-btn', 32);
+  }, []);
+
+  useEffect(() => {
+    const rail = railRef.current;
+    if (!rail) return;
+    const active = rail.querySelector<HTMLElement>('.sidebar-rail-btn.active');
+    if (active) motionEnter('navSpring', active);
+  }, [sidebarView, flyout]);
 
   const toggleFlyout = (panel: FlyoutPanel) => {
     setFlyout((current) => (current === panel ? null : panel));
@@ -80,7 +93,7 @@ export function SidebarRail(props: Props) {
 
   return (
     <>
-      <aside className="sidebar sidebar--rail">
+      <aside ref={railRef} className="sidebar sidebar--rail">
         <div className="sidebar-rail-header">
           <SidebarTooltip label={t('globalSearch.title')}>
             <button

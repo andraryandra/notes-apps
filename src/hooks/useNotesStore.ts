@@ -4,6 +4,8 @@ import { pickKanbanColumnColor } from '../utils/kanbanColumnColors';
 import { DEFAULT_KANBAN_GROUP_NAME } from '../utils/kanbanDisplayNames';
 import type { AppData, Folder, KanbanCard, KanbanColumn, KanbanGroup, Note, Tag, TodoItem, TodoStatus } from '../types';
 
+export const KANBAN_COLUMN_DRAG_MIME = 'application/x-notes-kanban-column';
+
 const TAG_COLORS = ['#8b5cf6', '#ec4899', '#06b6d4', '#22c55e', '#f59e0b', '#ef4444', '#3b82f6'];
 
 const defaultData: AppData = {
@@ -578,6 +580,36 @@ export function useNotesStore() {
     [persist]
   );
 
+  const moveKanbanColumn = useCallback(
+    (columnId: string, targetColumnId: string) => {
+      if (columnId === targetColumnId) return;
+      const col = dataRef.current.kanbanColumns.find((c) => c.id === columnId);
+      const target = dataRef.current.kanbanColumns.find((c) => c.id === targetColumnId);
+      if (!col || !target || col.groupId !== target.groupId) return;
+
+      const groupCols = dataRef.current.kanbanColumns
+        .filter((c) => c.groupId === col.groupId)
+        .sort((a, b) => a.order - b.order);
+
+      const fromIdx = groupCols.findIndex((c) => c.id === columnId);
+      const toIdx = groupCols.findIndex((c) => c.id === targetColumnId);
+      if (fromIdx === -1 || toIdx === -1) return;
+
+      const reordered = [...groupCols];
+      const [moved] = reordered.splice(fromIdx, 1);
+      reordered.splice(toIdx, 0, moved);
+
+      const orderMap = new Map(reordered.map((c, i) => [c.id, i]));
+      persist((prev) => ({
+        ...prev,
+        kanbanColumns: prev.kanbanColumns.map((c) =>
+          orderMap.has(c.id) ? { ...c, order: orderMap.get(c.id)! } : c
+        ),
+      }));
+    },
+    [persist]
+  );
+
   const createKanbanCard = useCallback(
     (
       groupId: string,
@@ -632,7 +664,13 @@ export function useNotesStore() {
 
   const moveKanbanCard = useCallback(
     (id: string, columnId: string) => {
-      updateKanbanCard(id, { columnId });
+      const card = dataRef.current.kanbanCards.find((c) => c.id === id);
+      if (!card || card.columnId === columnId) return;
+      const inCol = dataRef.current.kanbanCards.filter(
+        (c) => c.columnId === columnId && c.id !== id
+      );
+      const order = inCol.length ? Math.max(...inCol.map((c) => c.order)) + 1 : 0;
+      updateKanbanCard(id, { columnId, order });
     },
     [updateKanbanCard]
   );
@@ -720,6 +758,7 @@ export function useNotesStore() {
     renameKanbanColumn,
     updateKanbanColumnColor,
     deleteKanbanColumn,
+    moveKanbanColumn,
     createKanbanCard,
     updateKanbanCard,
     moveKanbanCard,

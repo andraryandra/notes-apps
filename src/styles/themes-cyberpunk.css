@@ -1,0 +1,108 @@
+/* Tema Cyberpunk — neon halus, nyaman untuk menulis lama */
+
+[data-theme='cyberpunk'] {
+  --bg-base: #070b14;
+  --bg-surface: #0d1220;
+  --bg-elevated: #121a2e;
+  --bg-hover: #182038;
+  --bg-active: #1f2848;
+  --border: color-mix(in srgb, #22d3ee 18%, transparent);
+  --border-focus: color-mix(in srgb, #22d3ee 55%, transparent);
+  --text-primary: #e8f4ff;
+  --text-secondary: #94b8d4;
+  --text-muted: #5a7a96;
+  --accent: #22d3ee;
+  --accent-hover: #67e8f9;
+  --accent-soft: color-mix(in srgb, #22d3ee 14%, transparent);
+  --accent-secondary: #e879f9;
+  --danger: #fb7185;
+  --success: #34d399;
+  --warning: #fbbf24;
+  --shadow: 0 4px 28px rgba(0, 0, 0, 0.55);
+  --code-bg: #0a1020;
+  --scrollbar-hover: #1e3a5f;
+  --titlebar-bg: #0d1220;
+  --editor-bg: #0a0f1a;
+  --editor-border: color-mix(in srgb, #22d3ee 22%, transparent);
+  --editor-text: #eef6ff;
+  --editor-scrollbar-track: rgba(34, 211, 238, 0.06);
+  --editor-scrollbar-thumb: color-mix(in srgb, #22d3ee 45%, transparent);
+  --editor-scrollbar-thumb-hover: color-mix(in srgb, #22d3ee 70%, transparent);
+  --cyber-glow: 0 0 14px color-mix(in srgb, #22d3ee 22%, transparent);
+  --cyber-grid-opacity: 0.045;
+}
+
+[data-theme='cyberday'] {
+  --bg-base: #f0f4fa;
+  --bg-surface: #ffffff;
+  --bg-elevated: #f8fafc;
+  --bg-hover: #e8eef6;
+  --bg-active: #dce6f2;
+  --border: color-mix(in srgb, #0891b2 16%, transparent);
+  --border-focus: color-mix(in srgb, #0891b2 45%, transparent);
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
+  --accent: #0891b2;
+  --accent-hover: #0e7490;
+  --accent-soft: color-mix(in srgb, #0891b2 12%, transparent);
+  --accent-secondary: #c026d3;
+  --danger: #e11d48;
+  --success: #059669;
+  --warning: #d97706;
+  --shadow: 0 4px 24px rgba(8, 145, 178, 0.1);
+  --code-bg: #f1f5f9;
+  --scrollbar-hover: #cbd5e1;
+  --titlebar-bg: #ffffff;
+  --editor-bg: #ffffff;
+  --editor-border: color-mix(in srgb, #0891b2 18%, transparent);
+  --editor-text: #0f172a;
+  --editor-scrollbar-track: #f1f5f9;
+  --editor-scrollbar-thumb: color-mix(in srgb, #0891b2 35%, transparent);
+  --editor-scrollbar-thumb-hover: color-mix(in srgb, #0891b2 55%, transparent);
+  --cyber-glow: 0 0 12px color-mix(in srgb, #0891b2 18%, transparent);
+  --cyber-grid-opacity: 0.035;
+}
+
+/* Efek khusus cyberpunk */
+.app--cyber::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: var(--cyber-grid-opacity, 0.04);
+  background-image:
+    linear-gradient(color-mix(in srgb, var(--accent) 40%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--accent) 40%, transparent) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+.app--cyber .sidebar {
+  box-shadow: var(--cyber-glow);
+}
+
+.app--cyber .nav-item.active,
+.app--cyber .sidebar-rail-btn.active {
+  box-shadow: var(--cyber-glow);
+}
+
+.app--cyber .toast {
+  box-shadow: var(--cyber-glow), var(--shadow);
+}
+
+.app--cyber button:focus-visible,
+.app--cyber input:focus-visible,
+.app--cyber textarea:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent) 60%, transparent);
+  outline-offset: 2px;
+}
+
+.theme-crossfade-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  pointer-events: none;
+  background: var(--bg-base);
+  opacity: 0;
+}

@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { TitleBar } from './components/TitleBar';
 import { Sidebar } from './components/Sidebar';
 import { NoteList } from './components/NoteList';
@@ -9,6 +9,8 @@ import { KanbanCardEditor } from './components/KanbanCardEditor';
 import { SchedulePanel } from './components/SchedulePanel';
 import { ScheduleListPanel } from './components/ScheduleListPanel';
 import { DashboardPanel } from './components/DashboardPanel';
+import { ViewTransition } from './components/ViewTransition';
+import { CyberpunkAmbient } from './components/CyberpunkAmbient';
 import { useNotesStore, stripHtml } from './hooks/useNotesStore';
 import { collectFolderDescendantIds, countNotesInFolderSet } from './utils/folderOptions';
 import { noteMatchesQuery } from './utils/noteSearch';
@@ -33,6 +35,7 @@ import {
   getKanbanColumnDisplayName,
   getKanbanGroupDisplayName,
 } from './utils/kanbanDisplayNames';
+import { motionEnter, motionExit, isCyberpunkTheme } from './utils/motion';
 import './styles/App.css';
 
 function PromptModal({
@@ -48,9 +51,32 @@ function PromptModal({
 }) {
   const { t } = useI18n();
   const [value, setValue] = useState('');
+  const overlayRef = useRef<HTMLDivElement>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
+  const closing = useRef(false);
+
+  useEffect(() => {
+    if (overlayRef.current) motionEnter('fade', overlayRef.current);
+    if (modalRef.current) motionEnter('dialog', modalRef.current);
+  }, []);
+
+  const closeWithAnim = (cb: () => void) => {
+    if (closing.current) return;
+    closing.current = true;
+    const dialog = modalRef.current;
+    const overlay = overlayRef.current;
+    if (!dialog || !overlay) {
+      cb();
+      return;
+    }
+    motionExit('dialog', dialog, () => {
+      motionExit('fade', overlay, cb);
+    });
+  };
+
   return (
-    <div className="modal-overlay">
-      <div className="modal">
+    <div ref={overlayRef} className="modal-overlay motion-from-hidden" onClick={() => closeWithAnim(onCancel)}>
+      <div ref={modalRef} className="modal motion-from-hidden" onClick={(e) => e.stopPropagation()}>
         <h3>{title}</h3>
         <input
           type="text"
@@ -59,19 +85,19 @@ function PromptModal({
           placeholder={placeholder}
           autoFocus
           onKeyDown={(e) => {
-            if (e.key === 'Enter' && value.trim()) onConfirm(value.trim());
-            if (e.key === 'Escape') onCancel();
+            if (e.key === 'Enter' && value.trim()) closeWithAnim(() => onConfirm(value.trim()));
+            if (e.key === 'Escape') closeWithAnim(onCancel);
           }}
         />
         <div className="modal-actions">
-          <button type="button" className="modal-cancel" onClick={onCancel}>
+          <button type="button" className="modal-cancel" onClick={() => closeWithAnim(onCancel)}>
             {t('common.cancel')}
           </button>
           <button
             type="button"
             className="modal-confirm"
             disabled={!value.trim()}
-            onClick={() => value.trim() && onConfirm(value.trim())}
+            onClick={() => value.trim() && closeWithAnim(() => onConfirm(value.trim()))}
           >
             {t('common.save')}
           </button>
@@ -132,6 +158,7 @@ function AppContent({
   const [selectedKanbanCardId, setSelectedKanbanCardId] = useState<string | null>(null);
   const [scheduleDayFilter, setScheduleDayFilter] = useState<number | null>(null);
   const [scheduleSelectedDay, setScheduleSelectedDay] = useState(() => dt.startOfDay(Date.now()));
+  const [schedulePanelOpen, setSchedulePanelOpen] = useState(true);
   const [pendingAsset, setPendingAsset] = useState<{
     noteId: string;
     asset: ParsedNoteAsset;
@@ -149,6 +176,15 @@ function AppContent({
   useEffect(() => {
     if (globalAssetsOpen) void store.hydrateAllNoteContents();
   }, [globalAssetsOpen, store.hydrateAllNoteContents]);
+
+  useEffect(() => {
+    if (!selectedNoteId) return;
+    document.querySelector('.app-body')?.classList.remove('is-list-scrolling');
+  }, [selectedNoteId]);
+
+  useEffect(() => {
+    if (sidebarView !== 'schedule') setSchedulePanelOpen(true);
+  }, [sidebarView]);
 
   const handleViewChange = useCallback(
     (view: SidebarView, folderId?: string | null, tagId?: string | null) => {
@@ -316,6 +352,7 @@ function AppContent({
       }
       void store.ensureNoteContent(noteId);
       setSelectedNoteId(noteId);
+      setSchedulePanelOpen((prev) => (selectedNoteId ? prev : false));
       if (isFocusLayout) setNoteListDrawerOpen(false);
     },
     [isFocusLayout, store, selectedNoteId]
@@ -355,6 +392,7 @@ function AppContent({
 
   const closeScheduleNote = useCallback(() => {
     setSelectedNoteId(null);
+    setSchedulePanelOpen(true);
   }, []);
 
   const handleGoToAsset = useCallback(
@@ -525,7 +563,10 @@ function AppContent({
   }
 
   return (
-    <div className={`app ${showSettings ? 'is-settings-open' : ''}`}>
+    <div
+      className={`app ${showSettings ? 'is-settings-open' : ''} ${isCyberpunkTheme(theme) ? 'app--cyber' : ''}`.trim()}
+    >
+      <CyberpunkAmbient enabled={isCyberpunkTheme(theme)} paused={showSettings || !!modal} />
       <TitleBar
         onOpenSettings={() => setShowSettings(true)}
         showNoteListToggle={isFocusLayout && !!selectedNote}
@@ -578,7 +619,8 @@ function AppContent({
           onDeleteKanbanGroup={handleDeleteKanbanGroup}
         />
         {sidebarView === 'dashboard' && (
-          <DashboardPanel
+          <ViewTransition viewKey="dashboard">
+            <DashboardPanel
             notes={data.notes}
             folders={data.folders}
             tags={data.tags}
@@ -593,8 +635,13 @@ function AppContent({
             scrollBatchSize={scrollBatchSize}
             onHydrateNoteContents={store.hydrateAllNoteContents}
           />
+          </ViewTransition>
         )}
         {sidebarView === 'todos' && (
+          <ViewTransition
+            viewKey={`todos-${selectedKanbanGroupId ?? 'none'}-${selectedKanbanCardId ?? 'none'}`}
+            className="kanban-workspace-wrap"
+          >
           <div
             className={`kanban-workspace ${selectedKanbanCard ? '' : 'kanban-workspace--board-only'}`.trim()}
           >
@@ -617,6 +664,7 @@ function AppContent({
                   setSelectedKanbanCardId(card.id);
                 }}
                 onMoveCard={store.moveKanbanCard}
+                onMoveColumn={store.moveKanbanColumn}
                 onDeleteCard={(id) => {
                   store.deleteKanbanCard(id);
                   if (selectedKanbanCardId === id) setSelectedKanbanCardId(null);
@@ -655,25 +703,60 @@ function AppContent({
               />
             )}
           </div>
+          </ViewTransition>
         )}
-        {sidebarView === 'schedule' && (
-          <SchedulePanel
-            notes={data.notes}
-            kanbanCards={data.kanbanCards}
-            tags={data.tags}
-            selectedDay={scheduleSelectedDay}
-            onSelectDay={(day) => {
-              setScheduleSelectedDay(day);
-              setScheduleDayFilter(day);
-            }}
-            onOpenNote={openNoteInSchedule}
-            onOpenKanbanCard={openKanbanCard}
-            onCreateNoteForDay={handleCreateNoteForDay}
-            onAssignNoteToDay={handleAssignNoteToDay}
-            onToggleNoteFavorite={handleToggleFavorite}
-            onToggleNotePin={handleTogglePin}
-            onDeleteNote={handleDeleteNote}
-          />
+        {sidebarView === 'schedule' && (!selectedNote || schedulePanelOpen) && (
+          <>
+            {selectedNote && schedulePanelOpen && (
+              <button
+                type="button"
+                className="schedule-drawer-backdrop"
+                aria-label={t('schedule.hidePanel')}
+                onClick={() => setSchedulePanelOpen(false)}
+              />
+            )}
+            <ViewTransition
+              viewKey={
+                selectedNote
+                  ? `schedule-note-${selectedNote.id}`
+                  : `schedule-${scheduleSelectedDay ?? 'all'}`
+              }
+              className={`schedule-workspace${selectedNote ? ' schedule-workspace--drawer' : ''}`}
+            >
+              <SchedulePanel
+                notes={data.notes}
+                kanbanCards={data.kanbanCards}
+                tags={data.tags}
+                selectedDay={scheduleSelectedDay}
+                onSelectDay={(day) => {
+                  setScheduleSelectedDay(day);
+                  setScheduleDayFilter(day);
+                }}
+                onOpenNote={openNoteInSchedule}
+                onOpenKanbanCard={openKanbanCard}
+                onCreateNoteForDay={handleCreateNoteForDay}
+                onAssignNoteToDay={handleAssignNoteToDay}
+                onToggleNoteFavorite={handleToggleFavorite}
+                onToggleNotePin={handleTogglePin}
+                onDeleteNote={handleDeleteNote}
+              />
+              {!selectedNote && (
+                <ScheduleListPanel
+                  notes={data.notes}
+                  kanbanCards={data.kanbanCards}
+                  tags={data.tags}
+                  pageSize={scrollBatchSize}
+                  dayFilter={scheduleDayFilter}
+                  onClearDayFilter={() => setScheduleDayFilter(null)}
+                  onOpenNote={openNoteInSchedule}
+                  onOpenKanbanCard={openKanbanCard}
+                  onToggleNoteFavorite={handleToggleFavorite}
+                  onToggleNotePin={handleTogglePin}
+                  onDeleteNote={handleDeleteNote}
+                />
+              )}
+            </ViewTransition>
+          </>
         )}
         {showNoteList && (
           <NoteList
@@ -730,27 +813,27 @@ function AppContent({
             onAssetScrolled={() => setPendingAsset(null)}
             onBack={sidebarView === 'schedule' ? closeScheduleNote : undefined}
             backLabel={t('app.backToSchedule')}
+            schedulePanelToggle={
+              sidebarView === 'schedule'
+                ? { open: schedulePanelOpen, onToggle: () => setSchedulePanelOpen((o) => !o) }
+                : undefined
+            }
           />
         ) : sidebarView !== 'todos' && sidebarView !== 'schedule' && sidebarView !== 'dashboard' ? (
           <EmptyState />
-        ) : sidebarView === 'schedule' ? (
-          <ScheduleListPanel
-            notes={data.notes}
-            kanbanCards={data.kanbanCards}
-            tags={data.tags}
-            pageSize={scrollBatchSize}
-            dayFilter={scheduleDayFilter}
-            onClearDayFilter={() => setScheduleDayFilter(null)}
-            onOpenNote={openNoteInSchedule}
-            onOpenKanbanCard={openKanbanCard}
-            onToggleNoteFavorite={handleToggleFavorite}
-            onToggleNotePin={handleTogglePin}
-            onDeleteNote={handleDeleteNote}
-          />
         ) : null}
+        {globalAssetsOpen && isToolsView && (
+          <button
+            type="button"
+            className="global-assets-backdrop"
+            aria-label={t('globalAssets.closePanel')}
+            onClick={() => setGlobalAssetsOpen(false)}
+          />
+        )}
         {globalAssetsOpen && (
           <GlobalAssetsPanel
             notes={data.notes}
+            overlay={isToolsView}
             onClose={() => setGlobalAssetsOpen(false)}
             onGoToAsset={handleGoToAsset}
           />

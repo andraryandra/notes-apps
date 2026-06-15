@@ -1,4 +1,5 @@
 @import './themes.css';
+@import './themes-cyberpunk.css';
 @import './layouts.css';
 
 :root {
@@ -23,6 +24,17 @@ html[data-layout='wide']:not([data-sidebar-mode='rail']) {
 
 html[data-layout='compact']:not([data-sidebar-mode='rail']) {
   --sidebar-width: 228px;
+}
+
+/* State awal sebelum anime.js enter (hindari flash) */
+.motion-from-hidden {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .motion-from-hidden {
+    opacity: 1;
+  }
 }
 
 * {

@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { X, Download, Upload, HardDrive, FolderOpen, Trash2, Image, Paperclip, Database, Keyboard, Languages, Globe, ZoomIn, ZoomOut, RotateCcw, RefreshCw } from 'lucide-react';
 import { useToast } from '../hooks/useToast';
 import { useConfirm } from '../hooks/useConfirm';
@@ -19,6 +19,7 @@ import { SCROLL_BATCH_SIZES, SQLITE_DB_NAME, type ScrollBatchSize } from '../con
 import { APP_TIME_ZONES, formatTimeZoneLabel, isValidTimeZone } from '../config/timezones';
 import { localeTag } from '../i18n/localeFormat';
 import type { StorageInfo, StoredFileInventory, StoredFileKind } from '../types';
+import { motionEnter, motionExit } from '../utils/motion';
 import './SettingsModal.css';
 
 function formatBytes(n: number): string {
@@ -102,6 +103,37 @@ export function SettingsModal({
   const [fileTab, setFileTab] = useState<StoredFileKind>('image');
   const [selectedKeys, setSelectedKeys] = useState<Set<string>>(() => new Set());
   const [busy, setBusy] = useState(false);
+  const overlayRef = useRef<HTMLDivElement>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
+  const closing = useRef(false);
+  const [visible, setVisible] = useState(true);
+
+  useEffect(() => {
+    if (overlayRef.current) motionEnter('fade', overlayRef.current);
+    if (modalRef.current) motionEnter('dialog', modalRef.current);
+  }, []);
+
+  const closeWithAnim = useCallback(
+    (cb: () => void) => {
+      if (closing.current) return;
+      closing.current = true;
+      const dialog = modalRef.current;
+      const overlay = overlayRef.current;
+      if (!dialog || !overlay) {
+        cb();
+        return;
+      }
+      motionExit('dialog', dialog, () => {
+        motionExit('fade', overlay, () => {
+          setVisible(false);
+          cb();
+        });
+      });
+    },
+    []
+  );
+
+  const handleClose = useCallback(() => closeWithAnim(onClose), [closeWithAnim, onClose]);
 
   const reloadStorage = useCallback(async () => {
     if (!window.electronAPI) return;
@@ -287,12 +319,18 @@ export function SettingsModal({
     }
   };
 
+  if (!visible) return null;
+
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="settings-modal settings-modal--wide" onClick={(e) => e.stopPropagation()}>
+    <div ref={overlayRef} className="modal-overlay motion-from-hidden" onClick={handleClose}>
+      <div
+        ref={modalRef}
+        className="settings-modal settings-modal--wide motion-from-hidden"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="settings-header">
           <h2>{t('settings.title')}</h2>
-          <button type="button" className="settings-close" onClick={onClose}>
+          <button type="button" className="settings-close" onClick={handleClose}>
             <X size={18} />
           </button>
         </div>

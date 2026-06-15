@@ -40,7 +40,7 @@ export default defineConfig({
     strictPort: true,
   },
   optimizeDeps: {
-    include: ['pdfjs-dist'],
+    include: ['pdfjs-dist', 'animejs'],
   },
   plugins: [
     react(),

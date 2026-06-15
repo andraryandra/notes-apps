@@ -415,6 +415,8 @@ export const id = {
     badgeNoteShort: 'Catatan',
     badgeTodoShort: 'TODO',
     pageRange: '{{start}}–{{end}} dari {{total}}',
+    showPanel: 'Tampilkan jadwal',
+    hidePanel: 'Sembunyikan jadwal',
   },
   kanban: {
     save: 'Simpan',
@@ -428,6 +430,8 @@ export const id = {
     addCard: 'Tambah kartu',
     cancel: 'Batal',
     deleteCard: 'Hapus kartu',
+    dragCard: 'Seret kartu ke kolom lain',
+    dragColumn: 'Seret untuk ubah urutan kolom',
     colTodo: 'Belum',
     colDoing: 'Sedang',
     colDone: 'Selesai',
@@ -590,6 +594,8 @@ export const id = {
       mint: { label: 'Mint', desc: 'Hijau mint segar' },
       paper: { label: 'Paper', desc: 'Krem seperti kertas' },
       graphite: { label: 'Graphite', desc: 'Abu terang minimal' },
+      cyberpunk: { label: 'Cyberpunk', desc: 'Neon cyan gelap futuristik' },
+      cyberday: { label: 'Cyberpunk Light', desc: 'Neon halus terang' },
     },
   },
 } as const;
