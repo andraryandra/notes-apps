@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.3.0](https://github.com/andraryandra/notes-apps/compare/v1.2.2...v1.3.0) (2026-06-15)
+
+
+### Features
+
+* add kanban card tags and column color customization ([5aae2b7](https://github.com/andraryandra/notes-apps/commit/5aae2b7a2562359c1db5df3a588fde8444cf460a))
+* implement sidebar mode customization and UI enhancements ([a56b7ca](https://github.com/andraryandra/notes-apps/commit/a56b7ca0bcc9be0a9266a6d19af4e9a5faa5d863))
+* implement soft delete functionality and enhance note management ([d00d83b](https://github.com/andraryandra/notes-apps/commit/d00d83bc73bf40412d739d57a0e3fb281f6bec76))
+* integrate animejs for enhanced animations and UI transitions ([e65aa92](https://github.com/andraryandra/notes-apps/commit/e65aa92e31ee5e356ce33c8f59f09d72170db7c9))
+
 ## [1.2.2](https://github.com/andraryandra/notes-apps/compare/v1.2.1...v1.2.2) (2026-06-08)
 
 
