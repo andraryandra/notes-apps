@@ -30,6 +30,7 @@ import {
   Link2,
   Unlink,
   Table2,
+  FileText,
 } from 'lucide-react';
 import { normalizeUrl } from '../utils/normalizeUrl';
 import { FontSize } from '../extensions/FontSize';
@@ -52,7 +53,9 @@ import { useI18n } from '../i18n/useI18n';
 import { processEditorFileDrop } from '../utils/fileDrop';
 import { resolveDropMarker, focusAtClientCoords } from '../utils/editorDropInsert';
 import { sanitizePastedHtml } from '../utils/pasteHtml';
-import type { Tag } from '../types';
+import { isNoteLink, parseNoteLink } from '../utils/noteLinks';
+import { NoteLinkPicker } from './NoteLinkPicker';
+import type { Note, Tag } from '../types';
 import './RichEditor.css';
 
 const FONT_SIZES = ['12px', '14px', '16px', '18px', '20px', '24px', '28px', '32px'];
@@ -65,6 +68,9 @@ interface Props {
   noteTagIds?: string[];
   onToggleTag?: (tagId: string) => void;
   onEditorReady?: (editor: Editor | null) => void;
+  notes?: Note[];
+  currentNoteId?: string;
+  onOpenNote?: (noteId: string) => void;
 }
 
 async function resolveContentImages(html: string): Promise<string> {
@@ -94,6 +100,9 @@ export function RichEditor({
   noteTagIds = [],
   onToggleTag = () => {},
   onEditorReady,
+  notes = [],
+  currentNoteId,
+  onOpenNote,
 }: Props) {
   const { t } = useI18n();
   const editorRef = useRef<Editor | null>(null);
@@ -104,8 +113,11 @@ export function RichEditor({
     null
   );
   const [linkBarOpen, setLinkBarOpen] = useState(false);
+  const [noteLinkPickerOpen, setNoteLinkPickerOpen] = useState(false);
   const [tablePanelOpen, setTablePanelOpen] = useState(false);
   const [linkInput, setLinkInput] = useState('https://');
+  const onOpenNoteRef = useRef(onOpenNote);
+  onOpenNoteRef.current = onOpenNote;
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
   const contentRef = useRef(content);
@@ -165,12 +177,22 @@ export function RichEditor({
       attributes: { class: 'tiptap-editor' },
       transformPastedHTML: (html) => sanitizePastedHtml(html),
       handleClick: (_view, _pos, event) => {
-        const anchor = (event.target as HTMLElement).closest('a.note-editor-link, a[href]');
+        const anchor = (event.target as HTMLElement).closest(
+          'a.note-internal-link, a.note-editor-link, a[href]'
+        );
         if (!anchor || event.button !== 0) return false;
         const href = anchor.getAttribute('href');
         if (!href) return false;
         const sel = window.getSelection();
         if (sel && !sel.isCollapsed) return false;
+        if (isNoteLink(href)) {
+          const noteId = parseNoteLink(href);
+          if (noteId && onOpenNoteRef.current) {
+            event.preventDefault();
+            onOpenNoteRef.current(noteId);
+            return true;
+          }
+        }
         event.preventDefault();
         window.open(href, '_blank', 'noopener,noreferrer');
         return true;
@@ -326,6 +348,20 @@ export function RichEditor({
     }
   }, [editor, noteTitle, showSuccess, t]);
 
+  const applyNoteLink = useCallback(
+    (href: string, label: string) => {
+      if (!editor) return;
+      editor
+        .chain()
+        .focus()
+        .insertContent(`<a href="${href}" class="note-internal-link">${label}</a>`)
+        .run();
+      setNoteLinkPickerOpen(false);
+      showSuccess(t('noteLinks.applied'));
+    },
+    [editor, showSuccess, t]
+  );
+
   const openLinkBar = useCallback(() => {
     setTablePanelOpen(false);
     if (!editor) return;
@@ -431,6 +467,13 @@ export function RichEditor({
             title={t('richEditor.insertLink')}
           >
             <Link2 size={16} />
+          </button>
+          <button
+            type="button"
+            onClick={() => setNoteLinkPickerOpen(true)}
+            title={t('noteLinks.insert')}
+          >
+            <FileText size={16} />
           </button>
           <button
             type="button"
@@ -647,6 +690,14 @@ export function RichEditor({
         <ImageContextMenu editor={editor} />
         <CodeBlockContextMenu editor={editor} />
       </div>
+
+      {noteLinkPickerOpen && (
+        <NoteLinkPicker
+          notes={notes.filter((n) => n.id !== currentNoteId)}
+          onSelect={applyNoteLink}
+          onClose={() => setNoteLinkPickerOpen(false)}
+        />
+      )}
     </div>
   );
 }

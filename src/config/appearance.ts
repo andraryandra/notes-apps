@@ -28,6 +28,8 @@ export const APP_THEMES = [
   'mint',
   'paper',
   'graphite',
+  'cyberpunk',
+  'cyberday',
 ] as const;
 
 export type AppTheme = (typeof APP_THEMES)[number];
@@ -35,6 +37,10 @@ export type AppTheme = (typeof APP_THEMES)[number];
 export const APP_LAYOUTS = ['standard', 'focus', 'wide', 'compact'] as const;
 
 export type AppLayoutMode = (typeof APP_LAYOUTS)[number];
+
+export const SIDEBAR_MODES = ['expanded', 'rail'] as const;
+
+export type SidebarMode = (typeof SIDEBAR_MODES)[number];
 
 export const APP_LOCALES = ['id', 'en'] as const;
 
@@ -51,6 +57,12 @@ export interface AppSettings {
   timeZone: string;
   /** Level zoom Electron (0 = 100%, negatif = lebih kecil) */
   uiZoomLevel: number;
+  /** Tampilan sidebar: penuh atau icon rail */
+  sidebarMode: SidebarMode;
+  /** Notifikasi jadwal saat app terbuka */
+  scheduleRemindersEnabled: boolean;
+  /** Kunci reminder yang sudah ditampilkan */
+  reminderFired: Record<string, number>;
 }
 
 export const MIN_UI_ZOOM_LEVEL = -5;
@@ -64,10 +76,17 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   locale: 'id',
   timeZone: detectSystemTimeZone(),
   uiZoomLevel: DEFAULT_UI_ZOOM_LEVEL,
+  sidebarMode: 'expanded',
+  scheduleRemindersEnabled: true,
+  reminderFired: {},
 };
 
 export function isAppTheme(value: unknown): value is AppTheme {
   return typeof value === 'string' && (APP_THEMES as readonly string[]).includes(value);
+}
+
+export function isSidebarMode(value: unknown): value is SidebarMode {
+  return typeof value === 'string' && (SIDEBAR_MODES as readonly string[]).includes(value);
 }
 
 export function isAppLayout(value: unknown): value is AppLayoutMode {
@@ -114,6 +133,8 @@ export const THEME_OPTIONS: {
   { id: 'mint', label: 'Mint', desc: 'Hijau mint segar', preview: { bg: '#f0fdf9', surface: '#ffffff', accent: '#14b8a6' } },
   { id: 'paper', label: 'Paper', desc: 'Krem seperti kertas', preview: { bg: '#f7f3eb', surface: '#fffdf8', accent: '#d97706' } },
   { id: 'graphite', label: 'Graphite', desc: 'Abu terang minimal', preview: { bg: '#ececef', surface: '#f8f8fa', accent: '#18181b' } },
+  { id: 'cyberpunk', label: 'Cyberpunk', desc: 'Neon cyan gelap futuristik', preview: { bg: '#070b14', surface: '#0d1220', accent: '#22d3ee' } },
+  { id: 'cyberday', label: 'Cyberpunk Light', desc: 'Neon halus terang', preview: { bg: '#f0f4fa', surface: '#ffffff', accent: '#0891b2' } },
 ];
 
 export const LAYOUT_OPTIONS: {

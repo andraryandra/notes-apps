@@ -110,6 +110,25 @@ Konten disimpan sebagai **HTML string** di `note.content`.
 
 - Aksi destruktif (hapus catatan, folder, file backup, dll.) memakai dialog modal modern (Ya/Tidak), bukan `window.confirm`.
 
+### 13. Tempat sampah
+
+- Soft delete untuk catatan dan kartu kanban (`deletedAt`).
+- View **Tempat sampah** di sidebar: pulihkan, hapus permanen, kosongkan sampah.
+
+### 14. Duplikat & template
+
+- Duplikat catatan dari menu konteks atau header editor.
+- Buat catatan dari template (rapat, jurnal, riset) lewat tombol **+** di daftar catatan.
+
+### 15. Pengingat jadwal
+
+- Notifikasi desktop saat `scheduledAt` tiba — **hanya saat aplikasi terbuka** (polling 60 detik).
+- Toggle di Pengaturan; dedup lewat `settings.json` → `reminderFired`.
+
+### 16. Tautan internal antar catatan
+
+- Format `notes-note://{noteId}` di editor; klik membuka catatan target.
+
 ## Pintasan keyboard (global)
 
 | Pintasan | Fungsi |
@@ -223,7 +242,7 @@ Editor memenuhi layar; daftar catatan jadi drawer (toggle dari title bar).
 
 - Tidak ada sinkronisasi cloud / multi-device.
 - Tidak ada enkripsi catatan.
-- Tidak ada undo history global / tempat sampah.
+- Pengingat jadwal tidak berjalan saat aplikasi benar-benar ditutup (bukan system tray).
 - Titlebar kustom (minimize/maximize/close) hanya di macOS; Linux/Windows memakai dekorasi window native.
 - Auto-update membutuhkan release via GitHub dengan manifest `latest*.yml` (electron-builder `--publish`).
 
@@ -236,5 +255,5 @@ Editor memenuhi layar; daftar catatan jadi drawer (toggle dari title bar).
 | Tag | Label lintas folder |
 | Favorit | Tandai penting + filter view |
 | Pin | Pin ke atas urutan daftar |
-| View | Mode sidebar (all, favorites, folder, tag, todos, schedule, dashboard) |
+| View | Mode sidebar (all, favorites, folder, tag, todos, schedule, dashboard, trash) |
 | Kartu kanban | Item TODO dengan konten HTML di papan kanban |

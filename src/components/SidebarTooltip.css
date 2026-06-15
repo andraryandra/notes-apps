@@ -1,0 +1,45 @@
+.sidebar-tooltip-wrap {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.sidebar-tooltip {
+  position: absolute;
+  left: calc(100% + 10px);
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--text-primary);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow);
+  pointer-events: none;
+  visibility: hidden;
+  z-index: 200;
+}
+
+.sidebar-tooltip-badge {
+  position: absolute;
+  top: 2px;
+  right: 10px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 1;
+  border-radius: 999px;
+  background: var(--accent);
+  color: white;
+  pointer-events: none;
+  z-index: 2;
+}

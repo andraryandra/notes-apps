@@ -1,0 +1,128 @@
+.kanban-col-color-picker {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.kanban-col-color-trigger {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid color-mix(in srgb, var(--text-primary) 12%, transparent);
+  box-shadow: 0 0 0 2px var(--bg-surface);
+  cursor: pointer;
+  transition: transform 0.12s, box-shadow 0.12s;
+}
+
+.kanban-col-color-trigger:hover {
+  transform: scale(1.12);
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
+
+.kanban-col-color-picker.is-open .kanban-col-color-trigger {
+  box-shadow: 0 0 0 2px var(--accent);
+}
+
+.kanban-col-color-popover {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--bg-elevated);
+  box-shadow: var(--shadow), 0 16px 40px rgba(0, 0, 0, 0.18);
+  padding: 12px;
+  animation: kanban-col-color-in 0.14s ease-out;
+}
+
+@keyframes kanban-col-color-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.kanban-col-color-label {
+  margin: 0 0 8px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.kanban-col-color-label:not(:first-child) {
+  margin-top: 12px;
+}
+
+.kanban-col-color-swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.kanban-col-color-swatch {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+
+.kanban-col-color-swatch:hover {
+  transform: scale(1.08);
+}
+
+.kanban-col-color-swatch.is-active {
+  border-color: var(--text-primary);
+  box-shadow: 0 0 0 2px var(--bg-elevated), 0 0 0 4px var(--accent-soft);
+}
+
+.kanban-col-color-custom {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.kanban-col-color-native {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: transparent;
+  cursor: pointer;
+}
+
+.kanban-col-color-hex {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 10px;
+  font-size: 12px;
+  font-family: ui-monospace, monospace;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  outline: none;
+}
+
+.kanban-col-color-hex:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
+
+.kanban-col-color-apply {
+  padding: 8px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: var(--radius-sm);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.kanban-col-color-apply:hover {
+  background: var(--accent);
+  color: white;
+}

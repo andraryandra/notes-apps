@@ -61,6 +61,28 @@
   color: var(--text-primary);
 }
 
+.note-editor-schedule-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  color: var(--text-secondary);
+  border-radius: var(--radius-md);
+  flex-shrink: 0;
+  transition: background 0.15s, color 0.15s;
+}
+
+.note-editor-schedule-toggle:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.note-editor-schedule-toggle.active {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
 .note-title-input {
   flex: 1;
   font-size: 28px;

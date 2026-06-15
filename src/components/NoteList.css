@@ -96,9 +96,15 @@
   color: var(--text-primary);
 }
 
+.note-create-wrap {
+  position: relative;
+}
+
 .note-create-btn {
-  width: 32px;
+  min-width: 32px;
   height: 32px;
+  padding: 0 6px;
+  gap: 2px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -106,6 +112,32 @@
   color: white;
   border-radius: var(--radius-md);
   transition: background 0.15s, transform 0.1s;
+}
+
+.note-create-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 20;
+  min-width: 180px;
+  padding: 4px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+}
+
+.note-create-menu button {
+  display: block;
+  width: 100%;
+  padding: 8px 10px;
+  text-align: left;
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+}
+
+.note-create-menu button:hover {
+  background: var(--bg-hover);
 }
 
 .note-create-btn:hover {

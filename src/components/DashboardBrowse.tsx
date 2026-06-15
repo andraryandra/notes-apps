@@ -120,7 +120,7 @@ export function DashboardBrowseList({
       }
     }
     for (const c of kanbanCards) {
-      const at = c.scheduledAt ?? c.dueAt;
+      const at = c.scheduledAt;
       if (at) {
         rows.push({
           kind: 'kanban',

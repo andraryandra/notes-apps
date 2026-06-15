@@ -1,0 +1,107 @@
+.sidebar-flyout-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 140;
+  background: rgba(0, 0, 0, 0.2);
+  border: none;
+  cursor: default;
+}
+
+.sidebar-flyout {
+  position: fixed;
+  top: var(--titlebar-height);
+  left: var(--sidebar-width);
+  bottom: 0;
+  width: min(300px, calc(100vw - var(--sidebar-width) - 16px));
+  z-index: 150;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-surface);
+  border-right: 1px solid var(--border);
+  box-shadow: 8px 0 32px rgba(0, 0, 0, 0.12);
+}
+
+.sidebar-flyout-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 14px 16px 12px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.sidebar-flyout-header h2 {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.sidebar-flyout-close {
+  padding: 6px;
+  color: var(--text-muted);
+  border-radius: var(--radius-sm);
+}
+
+.sidebar-flyout-close:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.sidebar-flyout-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.sidebar-flyout-body .global-search {
+  margin: 12px;
+}
+
+.sidebar-flyout-body .folder-tree,
+.sidebar-flyout-body .kanban-tree {
+  border: none;
+  max-height: none;
+}
+
+.sidebar-flyout-body .folder-tree-header,
+.sidebar-flyout-body .kanban-tree-header {
+  display: none;
+}
+
+.sidebar-flyout-body .tags-section {
+  border: none;
+  max-height: none;
+  padding: 0;
+}
+
+.sidebar-flyout-body .tags-header {
+  display: none;
+}
+
+.sidebar-flyout-tags {
+  padding: 8px 0 16px;
+}
+
+.sidebar-flyout-tags-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0 12px 8px;
+}
+
+.sidebar-flyout-tags-add {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+  border-radius: var(--radius-md);
+  background: var(--accent-soft);
+}
+
+.sidebar-flyout-tags-add:hover {
+  background: var(--accent);
+  color: white;
+}

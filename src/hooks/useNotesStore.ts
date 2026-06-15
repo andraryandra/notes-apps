@@ -1,7 +1,12 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid';
+import { pickKanbanColumnColor } from '../utils/kanbanColumnColors';
 import { DEFAULT_KANBAN_GROUP_NAME } from '../utils/kanbanDisplayNames';
+import { computeKanbanCardOrders, type KanbanOrderUpdate } from '../utils/kanbanMigrate';
+import { getNoteTemplate } from '../config/storage';
 import type { AppData, Folder, KanbanCard, KanbanColumn, KanbanGroup, Note, Tag, TodoItem, TodoStatus } from '../types';
+
+export const KANBAN_COLUMN_DRAG_MIME = 'application/x-notes-kanban-column';
 
 const TAG_COLORS = ['#8b5cf6', '#ec4899', '#06b6d4', '#22c55e', '#f59e0b', '#ef4444', '#3b82f6'];
 
@@ -226,10 +231,13 @@ export function useNotesStore() {
         const noteIdsToDelete = new Set(
           prev.notes.filter((n) => n.folderId && ids.has(n.folderId)).map((n) => n.id)
         );
+        const now = Date.now();
         return {
           ...prev,
           folders: prev.folders.filter((f) => !ids.has(f.id)),
-          notes: prev.notes.filter((n) => !noteIdsToDelete.has(n.id)),
+          notes: prev.notes.map((n) =>
+            noteIdsToDelete.has(n.id) ? { ...n, deletedAt: now, updatedAt: now } : n
+          ),
           todos: prev.todos.map((t) =>
             t.noteId && noteIdsToDelete.has(t.noteId) ? { ...t, noteId: null } : t
           ),
@@ -266,6 +274,7 @@ export function useNotesStore() {
         favorite: false,
         pinned: false,
         scheduledAt: options?.scheduledAt ?? null,
+        deletedAt: null,
         createdAt: Date.now(),
         updatedAt: Date.now(),
       };
@@ -302,10 +311,12 @@ export function useNotesStore() {
 
   const deleteNote = useCallback(
     (id: string) => {
+      const now = Date.now();
       persist((prev) => ({
         ...prev,
-        notes: prev.notes.filter((n) => n.id !== id),
-        todos: prev.todos.map((t) => (t.noteId === id ? { ...t, noteId: null } : t)),
+        notes: prev.notes.map((n) =>
+          n.id === id ? { ...n, deletedAt: now, updatedAt: now } : n
+        ),
       }));
     },
     [persist]
@@ -315,16 +326,101 @@ export function useNotesStore() {
     (ids: string[]) => {
       if (ids.length === 0) return;
       const idSet = new Set(ids);
+      const now = Date.now();
       persist((prev) => ({
         ...prev,
-        notes: prev.notes.filter((n) => !idSet.has(n.id)),
-        todos: prev.todos.map((t) =>
-          t.noteId && idSet.has(t.noteId) ? { ...t, noteId: null } : t
+        notes: prev.notes.map((n) =>
+          idSet.has(n.id) ? { ...n, deletedAt: now, updatedAt: now } : n
         ),
       }));
     },
     [persist]
   );
+
+  const restoreNote = useCallback(
+    (id: string) => {
+      persist((prev) => ({
+        ...prev,
+        notes: prev.notes.map((n) =>
+          n.id === id ? { ...n, deletedAt: null, updatedAt: Date.now() } : n
+        ),
+      }));
+    },
+    [persist]
+  );
+
+  const purgeNote = useCallback(
+    (id: string) => {
+      persist((prev) => ({
+        ...prev,
+        notes: prev.notes.filter((n) => n.id !== id),
+        todos: prev.todos.map((t) => (t.noteId === id ? { ...t, noteId: null } : t)),
+      }));
+    },
+    [persist]
+  );
+
+  const duplicateNote = useCallback(
+    (id: string) => {
+      const source = dataRef.current.notes.find((n) => n.id === id);
+      if (!source) return null;
+      const baseTitle = source.title.trim() || 'Catatan tanpa judul';
+      const note: Note = {
+        id: uuidv4(),
+        title: `${baseTitle} (salinan)`,
+        content: source.content,
+        contentPreview: source.contentPreview ?? '',
+        contentLoaded: source.contentLoaded ?? true,
+        folderId: source.folderId,
+        tagIds: [...source.tagIds],
+        favorite: false,
+        pinned: false,
+        scheduledAt: source.scheduledAt,
+        deletedAt: null,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      };
+      persist((prev) => ({ ...prev, notes: [note, ...prev.notes] }));
+      return note;
+    },
+    [persist]
+  );
+
+  const createNoteFromTemplate = useCallback(
+    (templateId: string, folderId: string | null = null) => {
+      const tpl = getNoteTemplate(templateId);
+      const note: Note = {
+        id: uuidv4(),
+        title: tpl.title,
+        content: tpl.content,
+        contentPreview: tpl.content
+          .replace(/<[^>]+>/g, ' ')
+          .replace(/\s+/g, ' ')
+          .trim()
+          .slice(0, 160),
+        contentLoaded: true,
+        folderId,
+        tagIds: [],
+        favorite: false,
+        pinned: false,
+        scheduledAt: null,
+        deletedAt: null,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      };
+      persist((prev) => ({ ...prev, notes: [note, ...prev.notes] }));
+      return note;
+    },
+    [persist]
+  );
+
+  const emptyTrash = useCallback(() => {
+    persist((prev) => ({
+      ...prev,
+      notes: prev.notes.filter((n) => n.deletedAt == null),
+      kanbanCards: prev.kanbanCards.filter((c) => c.deletedAt == null),
+    }));
+  }, [persist]);
 
   const createTodo = useCallback(
     (
@@ -436,6 +532,10 @@ export function useNotesStore() {
           ...n,
           tagIds: n.tagIds.filter((t) => t !== id),
         })),
+        kanbanCards: prev.kanbanCards.map((c) => ({
+          ...c,
+          tagIds: (c.tagIds ?? []).filter((t) => t !== id),
+        })),
       }));
     },
     [persist]
@@ -474,6 +574,7 @@ export function useNotesStore() {
         groupId: group.id,
         name: 'Kolom 1',
         order: 0,
+        color: pickKanbanColumnColor(0),
       };
       persist((prev) => ({
         ...prev,
@@ -518,6 +619,7 @@ export function useNotesStore() {
         groupId,
         name: name.trim() || `Kolom ${order + 1}`,
         order,
+        color: pickKanbanColumnColor(order),
       };
       persist((prev) => ({ ...prev, kanbanColumns: [...prev.kanbanColumns, col] }));
       return col;
@@ -531,6 +633,20 @@ export function useNotesStore() {
         ...prev,
         kanbanColumns: prev.kanbanColumns.map((c) =>
           c.id === id ? { ...c, name: name.trim() || c.name } : c
+        ),
+      }));
+    },
+    [persist]
+  );
+
+  const updateKanbanColumnColor = useCallback(
+    (id: string, color: string) => {
+      const next = color.trim();
+      if (!next) return;
+      persist((prev) => ({
+        ...prev,
+        kanbanColumns: prev.kanbanColumns.map((c) =>
+          c.id === id ? { ...c, color: next } : c
         ),
       }));
     },
@@ -557,15 +673,45 @@ export function useNotesStore() {
     [persist]
   );
 
+  const moveKanbanColumn = useCallback(
+    (columnId: string, targetColumnId: string) => {
+      if (columnId === targetColumnId) return;
+      const col = dataRef.current.kanbanColumns.find((c) => c.id === columnId);
+      const target = dataRef.current.kanbanColumns.find((c) => c.id === targetColumnId);
+      if (!col || !target || col.groupId !== target.groupId) return;
+
+      const groupCols = dataRef.current.kanbanColumns
+        .filter((c) => c.groupId === col.groupId)
+        .sort((a, b) => a.order - b.order);
+
+      const fromIdx = groupCols.findIndex((c) => c.id === columnId);
+      const toIdx = groupCols.findIndex((c) => c.id === targetColumnId);
+      if (fromIdx === -1 || toIdx === -1) return;
+
+      const reordered = [...groupCols];
+      const [moved] = reordered.splice(fromIdx, 1);
+      reordered.splice(toIdx, 0, moved);
+
+      const orderMap = new Map(reordered.map((c, i) => [c.id, i]));
+      persist((prev) => ({
+        ...prev,
+        kanbanColumns: prev.kanbanColumns.map((c) =>
+          orderMap.has(c.id) ? { ...c, order: orderMap.get(c.id)! } : c
+        ),
+      }));
+    },
+    [persist]
+  );
+
   const createKanbanCard = useCallback(
     (
       groupId: string,
       columnId: string,
       title: string,
-      options?: { content?: string; linkedNoteId?: string | null; dueAt?: number | null }
+      options?: { content?: string; linkedNoteId?: string | null; tagIds?: string[] }
     ) => {
       const inCol = dataRef.current.kanbanCards.filter(
-        (c) => c.groupId === groupId && c.columnId === columnId
+        (c) => c.groupId === groupId && c.columnId === columnId && c.deletedAt == null
       );
       const order = inCol.length ? Math.max(...inCol.map((c) => c.order)) + 1 : 0;
       const now = Date.now();
@@ -576,9 +722,11 @@ export function useNotesStore() {
         title: title.trim() || 'Kartu baru',
         content: options?.content ?? '',
         order,
-        dueAt: options?.dueAt ?? null,
+        dueAt: null,
         scheduledAt: null,
+        tagIds: options?.tagIds ?? [],
         linkedNoteId: options?.linkedNoteId ?? null,
+        deletedAt: null,
         createdAt: now,
         updatedAt: now,
       };
@@ -594,7 +742,7 @@ export function useNotesStore() {
       patch: Partial<
         Pick<
           KanbanCard,
-          'title' | 'content' | 'columnId' | 'dueAt' | 'scheduledAt' | 'linkedNoteId' | 'order'
+          'title' | 'content' | 'columnId' | 'scheduledAt' | 'tagIds' | 'linkedNoteId' | 'order'
         >
       >
     ) => {
@@ -609,13 +757,60 @@ export function useNotesStore() {
   );
 
   const moveKanbanCard = useCallback(
-    (id: string, columnId: string) => {
-      updateKanbanCard(id, { columnId });
+    (id: string, columnId: string, insertBeforeCardId?: string | null) => {
+      const updates = computeKanbanCardOrders(
+        dataRef.current.kanbanCards,
+        id,
+        columnId,
+        insertBeforeCardId
+      );
+      if (!updates?.length) return;
+      const orderMap = new Map<string, number>(
+        updates.map((u: KanbanOrderUpdate) => [u.id, u.order])
+      );
+      persist((prev) => ({
+        ...prev,
+        kanbanCards: prev.kanbanCards.map((c) => {
+          const nextOrder = orderMap.get(c.id);
+          if (nextOrder === undefined) return c;
+          return {
+            ...c,
+            columnId: c.id === id ? columnId : c.columnId,
+            order: nextOrder,
+            updatedAt: Date.now(),
+          };
+        }),
+      }));
     },
-    [updateKanbanCard]
+    [persist]
   );
 
   const deleteKanbanCard = useCallback(
+    (id: string) => {
+      const now = Date.now();
+      persist((prev) => ({
+        ...prev,
+        kanbanCards: prev.kanbanCards.map((c) =>
+          c.id === id ? { ...c, deletedAt: now, updatedAt: now } : c
+        ),
+      }));
+    },
+    [persist]
+  );
+
+  const restoreKanbanCard = useCallback(
+    (id: string) => {
+      persist((prev) => ({
+        ...prev,
+        kanbanCards: prev.kanbanCards.map((c) =>
+          c.id === id ? { ...c, deletedAt: null, updatedAt: Date.now() } : c
+        ),
+      }));
+    },
+    [persist]
+  );
+
+  const purgeKanbanCard = useCallback(
     (id: string) => {
       persist((prev) => ({
         ...prev,
@@ -623,6 +818,18 @@ export function useNotesStore() {
       }));
     },
     [persist]
+  );
+
+  const toggleKanbanCardTag = useCallback(
+    (cardId: string, tagId: string) => {
+      const card = dataRef.current.kanbanCards.find((c) => c.id === cardId);
+      if (!card) return;
+      const tagIds = card.tagIds.includes(tagId)
+        ? card.tagIds.filter((t) => t !== tagId)
+        : [...card.tagIds, tagId];
+      updateKanbanCard(cardId, { tagIds });
+    },
+    [updateKanbanCard]
   );
 
   const createKanbanCardFromNote = useCallback(
@@ -647,6 +854,7 @@ export function useNotesStore() {
       return createKanbanCard(group.id, col.id, title, {
         content: note?.content ?? '',
         linkedNoteId: noteId,
+        tagIds: note?.tagIds ?? [],
       });
     },
     [createKanbanGroup, createKanbanColumn, createKanbanCard]
@@ -667,6 +875,11 @@ export function useNotesStore() {
     updateNote,
     deleteNote,
     deleteNotes,
+    restoreNote,
+    purgeNote,
+    duplicateNote,
+    createNoteFromTemplate,
+    emptyTrash,
     moveNotesToFolder,
     toggleFavorite,
     togglePin,
@@ -683,12 +896,17 @@ export function useNotesStore() {
     deleteKanbanGroup,
     createKanbanColumn,
     renameKanbanColumn,
+    updateKanbanColumnColor,
     deleteKanbanColumn,
+    moveKanbanColumn,
     createKanbanCard,
     updateKanbanCard,
     moveKanbanCard,
     deleteKanbanCard,
+    restoreKanbanCard,
+    purgeKanbanCard,
     createKanbanCardFromNote,
+    toggleKanbanCardTag,
   };
 }
 

@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { TitleBar } from './components/TitleBar';
 import { Sidebar } from './components/Sidebar';
 import { NoteList } from './components/NoteList';
@@ -9,7 +9,8 @@ import { KanbanCardEditor } from './components/KanbanCardEditor';
 import { SchedulePanel } from './components/SchedulePanel';
 import { ScheduleListPanel } from './components/ScheduleListPanel';
 import { DashboardPanel } from './components/DashboardPanel';
-import { CheckSquare } from 'lucide-react';
+import { ViewTransition } from './components/ViewTransition';
+import { CyberpunkAmbient } from './components/CyberpunkAmbient';
 import { useNotesStore, stripHtml } from './hooks/useNotesStore';
 import { collectFolderDescendantIds, countNotesInFolderSet } from './utils/folderOptions';
 import { noteMatchesQuery } from './utils/noteSearch';
@@ -19,7 +20,15 @@ import { ConfirmProvider } from './context/ConfirmContext';
 import { useI18n } from './i18n/useI18n';
 import { SettingsModal } from './components/SettingsModal';
 import { GlobalAssetsPanel } from './components/GlobalAssetsPanel';
+import { TrashPanel } from './components/TrashPanel';
+import { NoteTemplatePicker } from './components/NoteTemplatePicker';
 import { parseGlobalNoteAssets } from './utils/parseGlobalNoteAssets';
+import {
+  filterActiveKanbanCards,
+  filterActiveNotes,
+  filterDeletedKanbanCards,
+  filterDeletedNotes,
+} from './utils/trashFilter';
 import type { ParsedNoteAsset } from './utils/parseNoteAssets';
 import type { SidebarView } from './types';
 import { useGlobalShortcuts } from './hooks/useGlobalShortcuts';
@@ -28,12 +37,14 @@ import { exportNoteFile } from './utils/exportNote';
 import { createTranslator } from './i18n/translator';
 import type { AppLocale } from './config/appearance';
 import { useToast } from './hooks/useToast';
+import { useScheduleReminders } from './hooks/useScheduleReminders';
 import { useConfirm } from './hooks/useConfirm';
 import { useDateTime } from './hooks/useDateTime';
 import {
   getKanbanColumnDisplayName,
   getKanbanGroupDisplayName,
 } from './utils/kanbanDisplayNames';
+import { motionEnter, motionExit, isCyberpunkTheme } from './utils/motion';
 import './styles/App.css';
 
 function PromptModal({
@@ -49,9 +60,32 @@ function PromptModal({
 }) {
   const { t } = useI18n();
   const [value, setValue] = useState('');
+  const overlayRef = useRef<HTMLDivElement>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
+  const closing = useRef(false);
+
+  useEffect(() => {
+    if (overlayRef.current) motionEnter('fade', overlayRef.current);
+    if (modalRef.current) motionEnter('dialog', modalRef.current);
+  }, []);
+
+  const closeWithAnim = (cb: () => void) => {
+    if (closing.current) return;
+    closing.current = true;
+    const dialog = modalRef.current;
+    const overlay = overlayRef.current;
+    if (!dialog || !overlay) {
+      cb();
+      return;
+    }
+    motionExit('dialog', dialog, () => {
+      motionExit('fade', overlay, cb);
+    });
+  };
+
   return (
-    <div className="modal-overlay">
-      <div className="modal">
+    <div ref={overlayRef} className="modal-overlay motion-from-hidden" onClick={() => closeWithAnim(onCancel)}>
+      <div ref={modalRef} className="modal motion-from-hidden" onClick={(e) => e.stopPropagation()}>
         <h3>{title}</h3>
         <input
           type="text"
@@ -60,19 +94,19 @@ function PromptModal({
           placeholder={placeholder}
           autoFocus
           onKeyDown={(e) => {
-            if (e.key === 'Enter' && value.trim()) onConfirm(value.trim());
-            if (e.key === 'Escape') onCancel();
+            if (e.key === 'Enter' && value.trim()) closeWithAnim(() => onConfirm(value.trim()));
+            if (e.key === 'Escape') closeWithAnim(onCancel);
           }}
         />
         <div className="modal-actions">
-          <button type="button" className="modal-cancel" onClick={onCancel}>
+          <button type="button" className="modal-cancel" onClick={() => closeWithAnim(onCancel)}>
             {t('common.cancel')}
           </button>
           <button
             type="button"
             className="modal-confirm"
             disabled={!value.trim()}
-            onClick={() => value.trim() && onConfirm(value.trim())}
+            onClick={() => value.trim() && closeWithAnim(() => onConfirm(value.trim()))}
           >
             {t('common.save')}
           </button>
@@ -118,10 +152,17 @@ function AppContent({
     uiZoomLevel,
     setUiZoomLevel,
     adjustUiZoomLevel,
+    sidebarMode,
+    setSidebarMode,
+    scheduleRemindersEnabled,
+    reminderFired,
+    patchSettings,
+    setScheduleRemindersEnabled,
     ready,
   } = appearance;
   const [noteListDrawerOpen, setNoteListDrawerOpen] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [templatePickerOpen, setTemplatePickerOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [sidebarView, setSidebarView] = useState<SidebarView>('all');
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
@@ -131,6 +172,7 @@ function AppContent({
   const [selectedKanbanCardId, setSelectedKanbanCardId] = useState<string | null>(null);
   const [scheduleDayFilter, setScheduleDayFilter] = useState<number | null>(null);
   const [scheduleSelectedDay, setScheduleSelectedDay] = useState(() => dt.startOfDay(Date.now()));
+  const [schedulePanelOpen, setSchedulePanelOpen] = useState(true);
   const [pendingAsset, setPendingAsset] = useState<{
     noteId: string;
     asset: ParsedNoteAsset;
@@ -149,6 +191,15 @@ function AppContent({
     if (globalAssetsOpen) void store.hydrateAllNoteContents();
   }, [globalAssetsOpen, store.hydrateAllNoteContents]);
 
+  useEffect(() => {
+    if (!selectedNoteId) return;
+    document.querySelector('.app-body')?.classList.remove('is-list-scrolling');
+  }, [selectedNoteId]);
+
+  useEffect(() => {
+    if (sidebarView !== 'schedule') setSchedulePanelOpen(true);
+  }, [sidebarView]);
+
   const handleViewChange = useCallback(
     (view: SidebarView, folderId?: string | null, tagId?: string | null) => {
       setSidebarView(view);
@@ -158,7 +209,7 @@ function AppContent({
       if (view === 'todos' || view === 'schedule') {
         setSelectedKanbanCardId(null);
       }
-      if (view === 'dashboard') {
+      if (view === 'dashboard' || view === 'trash') {
         setSelectedNoteId(null);
         setSelectedKanbanGroupId(null);
         setSelectedKanbanCardId(null);
@@ -170,8 +221,14 @@ function AppContent({
     []
   );
 
+  const activeNotes = useMemo(() => filterActiveNotes(data.notes), [data.notes]);
+  const activeKanbanCards = useMemo(
+    () => filterActiveKanbanCards(data.kanbanCards),
+    [data.kanbanCards]
+  );
+
   const filteredNotes = useMemo(() => {
-    let notes = data.notes;
+    let notes = activeNotes;
 
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
@@ -202,7 +259,7 @@ function AppContent({
     }
 
     return notes;
-  }, [data.notes, data.folders, searchQuery, sidebarView, selectedFolderId, selectedTagId]);
+  }, [activeNotes, data.folders, searchQuery, sidebarView, selectedFolderId, selectedTagId]);
 
   const listTitle = useMemo(() => {
     if (searchQuery.trim()) return t('app.listTitle.search', { query: searchQuery });
@@ -217,12 +274,17 @@ function AppContent({
         const tag = data.tags.find((x) => x.id === selectedTagId);
         return tag ? `#${tag.name}` : t('app.listTitle.tag');
       }
+      case 'trash':
+        return t('app.listTitle.trash');
       default:
         return t('app.listTitle.all');
     }
   }, [searchQuery, sidebarView, selectedFolderId, selectedTagId, data.folders, data.tags, t]);
 
-  const selectedNote = data.notes.find((n) => n.id === selectedNoteId) ?? null;
+  const selectedNote =
+    activeNotes.find((n) => n.id === selectedNoteId) ??
+    data.notes.find((n) => n.id === selectedNoteId && n.deletedAt != null) ??
+    null;
 
   const selectedKanbanGroup =
     data.kanbanGroups.find((g) => g.id === selectedKanbanGroupId) ?? null;
@@ -238,13 +300,15 @@ function AppContent({
   const groupCards = useMemo(
     () =>
       selectedKanbanGroupId
-        ? data.kanbanCards.filter((c) => c.groupId === selectedKanbanGroupId)
+        ? activeKanbanCards.filter((c) => c.groupId === selectedKanbanGroupId)
         : [],
-    [data.kanbanCards, selectedKanbanGroupId]
+    [activeKanbanCards, selectedKanbanGroupId]
   );
 
   const selectedKanbanCard =
-    data.kanbanCards.find((c) => c.id === selectedKanbanCardId) ?? null;
+    activeKanbanCards.find((c) => c.id === selectedKanbanCardId) ??
+    data.kanbanCards.find((c) => c.id === selectedKanbanCardId && c.deletedAt != null) ??
+    null;
 
   const selectedCardColumn = selectedKanbanCard
     ? data.kanbanColumns.find((c) => c.id === selectedKanbanCard.columnId)
@@ -253,26 +317,34 @@ function AppContent({
   const linkedKanbanForNote = useMemo(
     () =>
       selectedNote
-        ? data.kanbanCards.filter((c) => c.linkedNoteId === selectedNote.id)
+        ? activeKanbanCards.filter((c) => c.linkedNoteId === selectedNote.id)
         : [],
-    [data.kanbanCards, selectedNote?.id]
+    [activeKanbanCards, selectedNote?.id]
   );
 
   const globalAssetCount = useMemo(
-    () => parseGlobalNoteAssets(data.notes).counts.all,
-    [data.notes]
+    () => parseGlobalNoteAssets(activeNotes).counts.all,
+    [activeNotes]
+  );
+
+  const trashCount = useMemo(
+    () => filterDeletedNotes(data.notes).length + filterDeletedKanbanCards(data.kanbanCards).length,
+    [data.notes, data.kanbanCards]
   );
 
   const isFocusLayout = layout === 'focus';
   const isToolsView =
-    sidebarView === 'dashboard' || sidebarView === 'todos' || sidebarView === 'schedule';
+    sidebarView === 'dashboard' ||
+    sidebarView === 'todos' ||
+    sidebarView === 'schedule' ||
+    sidebarView === 'trash';
   const hideNoteList = !isToolsView && isFocusLayout && !!selectedNote && !noteListDrawerOpen;
   const showNoteList = !isToolsView && !hideNoteList;
 
-  const todosActiveCount = data.kanbanCards.length;
+  const todosActiveCount = activeKanbanCards.length;
   const scheduleCount =
-    data.notes.filter((n) => n.scheduledAt).length +
-    data.kanbanCards.filter((c) => c.dueAt || c.scheduledAt).length;
+    activeNotes.filter((n) => n.scheduledAt).length +
+    activeKanbanCards.filter((c) => c.scheduledAt).length;
 
   useEffect(() => {
     if (!isFocusLayout || !selectedNote) setNoteListDrawerOpen(false);
@@ -315,6 +387,7 @@ function AppContent({
       }
       void store.ensureNoteContent(noteId);
       setSelectedNoteId(noteId);
+      setSchedulePanelOpen((prev) => (selectedNoteId ? prev : false));
       if (isFocusLayout) setNoteListDrawerOpen(false);
     },
     [isFocusLayout, store, selectedNoteId]
@@ -354,6 +427,7 @@ function AppContent({
 
   const closeScheduleNote = useCallback(() => {
     setSelectedNoteId(null);
+    setSchedulePanelOpen(true);
   }, []);
 
   const handleGoToAsset = useCallback(
@@ -372,6 +446,129 @@ function AppContent({
     setSelectedNoteId(note.id);
     showSuccess(t('app.toast.noteCreated'));
   }, [store, sidebarView, selectedFolderId, showSuccess, t]);
+
+  const handleCreateFromTemplate = useCallback(
+    (templateId: string) => {
+      const folderId = sidebarView === 'folder' ? selectedFolderId : null;
+      const note = store.createNoteFromTemplate(templateId, folderId);
+      setSelectedNoteId(note.id);
+      setTemplatePickerOpen(false);
+      showSuccess(t('app.toast.noteCreated'));
+    },
+    [store, sidebarView, selectedFolderId, showSuccess, t]
+  );
+
+  const handleDuplicateNote = useCallback(
+    (id: string) => {
+      const note = store.duplicateNote(id);
+      if (!note) return;
+      setSelectedNoteId(note.id);
+      showSuccess(t('app.toast.noteDuplicated'));
+    },
+    [store, showSuccess, t]
+  );
+
+  const handleRestoreNote = useCallback(
+    (id: string) => {
+      store.restoreNote(id);
+      showSuccess(t('trash.toast.restoredNote'));
+    },
+    [store, showSuccess, t]
+  );
+
+  const handlePurgeNote = useCallback(
+    async (id: string) => {
+      const ok = await confirm({
+        title: t('trash.purgeNoteTitle'),
+        message: t('trash.purgeNoteConfirm'),
+        confirmLabel: t('trash.purge'),
+        variant: 'danger',
+      });
+      if (!ok) return;
+      store.purgeNote(id);
+      showSuccess(t('trash.toast.purged'));
+    },
+    [store, confirm, showSuccess, t]
+  );
+
+  const handleRestoreKanbanCard = useCallback(
+    (id: string) => {
+      store.restoreKanbanCard(id);
+      showSuccess(t('trash.toast.restoredCard'));
+    },
+    [store, showSuccess, t]
+  );
+
+  const handlePurgeKanbanCard = useCallback(
+    async (id: string) => {
+      const ok = await confirm({
+        title: t('trash.purgeCardTitle'),
+        message: t('trash.purgeCardConfirm'),
+        confirmLabel: t('trash.purge'),
+        variant: 'danger',
+      });
+      if (!ok) return;
+      store.purgeKanbanCard(id);
+      showSuccess(t('trash.toast.purged'));
+    },
+    [store, confirm, showSuccess, t]
+  );
+
+  const handleEmptyTrash = useCallback(async () => {
+    if (trashCount === 0) return;
+    const ok = await confirm({
+      title: t('trash.emptyAllTitle'),
+      message: t('trash.emptyAllConfirm', { count: trashCount }),
+      confirmLabel: t('trash.emptyAll'),
+      variant: 'danger',
+    });
+    if (!ok) return;
+    store.emptyTrash();
+    showSuccess(t('trash.toast.emptied'));
+  }, [trashCount, store, confirm, showSuccess, t]);
+
+  const handleOpenTrashNote = useCallback(
+    (id: string) => {
+      store.restoreNote(id);
+      openNote(id);
+    },
+    [store, openNote]
+  );
+
+  const handleOpenTrashKanbanCard = useCallback(
+    (cardId: string, groupId: string) => {
+      store.restoreKanbanCard(cardId);
+      openKanbanCard(cardId, groupId);
+    },
+    [store, openKanbanCard]
+  );
+
+  const handleReminderFired = useCallback(
+    (next: Record<string, number>) => {
+      void patchSettings({ reminderFired: next });
+    },
+    [patchSettings]
+  );
+
+  useScheduleReminders(
+    scheduleRemindersEnabled,
+    data.notes,
+    data.kanbanCards,
+    reminderFired,
+    handleReminderFired,
+    t('noteList.untitled')
+  );
+
+  useEffect(() => {
+    if (!window.electronAPI?.onScheduleReminderOpen) return;
+    return window.electronAPI.onScheduleReminderOpen((payload) => {
+      if (payload.kanbanCardId && payload.groupId) {
+        openKanbanCard(payload.kanbanCardId, payload.groupId);
+      } else if (payload.noteId) {
+        openNote(payload.noteId);
+      }
+    });
+  }, [openNote, openKanbanCard]);
 
   const handleLocaleChange = useCallback(
     async (next: AppLocale) => {
@@ -450,7 +647,7 @@ function AppContent({
   const handleDeleteFolder = useCallback(
     async (folderId: string) => {
       const folderIds = collectFolderDescendantIds(data.folders, folderId);
-      const noteCount = countNotesInFolderSet(data.notes, folderIds);
+      const noteCount = countNotesInFolderSet(activeNotes, folderIds);
       const folder = data.folders.find((f) => f.id === folderId);
       const folderName = folder?.name ?? t('common.folder');
 
@@ -465,7 +662,7 @@ function AppContent({
       });
       if (!ok) return;
 
-      const noteIdsToDelete = data.notes
+      const noteIdsToDelete = activeNotes
         .filter((n) => n.folderId && folderIds.has(n.folderId))
         .map((n) => n.id);
       store.deleteFolder(folderId);
@@ -482,7 +679,7 @@ function AppContent({
           : t('app.toast.folderDeleted')
       );
     },
-    [data.folders, data.notes, store, selectedNoteId, selectedFolderId, showSuccess, t, confirm]
+    [data.folders, activeNotes, store, selectedNoteId, selectedFolderId, showSuccess, t, confirm]
   );
 
   useGlobalShortcuts({
@@ -524,7 +721,10 @@ function AppContent({
   }
 
   return (
-    <div className={`app ${showSettings ? 'is-settings-open' : ''}`}>
+    <div
+      className={`app ${showSettings ? 'is-settings-open' : ''} ${isCyberpunkTheme(theme) ? 'app--cyber' : ''}`.trim()}
+    >
+      <CyberpunkAmbient enabled={isCyberpunkTheme(theme)} paused={showSettings || !!modal} />
       <TitleBar
         onOpenSettings={() => setShowSettings(true)}
         showNoteListToggle={isFocusLayout && !!selectedNote}
@@ -543,6 +743,8 @@ function AppContent({
           />
         )}
         <Sidebar
+          mode={sidebarMode}
+          onModeChange={setSidebarMode}
           folders={data.folders}
           tags={data.tags}
           searchQuery={searchQuery}
@@ -557,10 +759,11 @@ function AppContent({
           onCreateTag={() => setModal({ type: 'tag' })}
           onDeleteTag={store.deleteTag}
           noteCounts={{
-            all: data.notes.length,
-            favorites: data.notes.filter((n) => n.favorite).length,
+            all: activeNotes.length,
+            favorites: activeNotes.filter((n) => n.favorite).length,
             todosActive: todosActiveCount,
             schedule: scheduleCount,
+            trash: trashCount,
           }}
           globalAssetsOpen={globalAssetsOpen}
           globalAssetCount={globalAssetCount}
@@ -575,12 +778,13 @@ function AppContent({
           onDeleteKanbanGroup={handleDeleteKanbanGroup}
         />
         {sidebarView === 'dashboard' && (
-          <DashboardPanel
-            notes={data.notes}
+          <ViewTransition viewKey="dashboard">
+            <DashboardPanel
+            notes={activeNotes}
             folders={data.folders}
             tags={data.tags}
             kanbanGroups={data.kanbanGroups}
-            kanbanCards={data.kanbanCards}
+            kanbanCards={activeKanbanCards}
             onNavigate={handleViewChange}
             onOpenGlobalAssets={() => setGlobalAssetsOpen(true)}
             onOpenNote={openNote}
@@ -590,9 +794,32 @@ function AppContent({
             scrollBatchSize={scrollBatchSize}
             onHydrateNoteContents={store.hydrateAllNoteContents}
           />
+          </ViewTransition>
+        )}
+        {sidebarView === 'trash' && (
+          <ViewTransition viewKey="trash">
+            <TrashPanel
+              notes={data.notes}
+              kanbanCards={data.kanbanCards}
+              kanbanGroups={data.kanbanGroups}
+              onRestoreNote={handleRestoreNote}
+              onPurgeNote={handlePurgeNote}
+              onRestoreKanbanCard={handleRestoreKanbanCard}
+              onPurgeKanbanCard={handlePurgeKanbanCard}
+              onEmptyTrash={handleEmptyTrash}
+              onOpenNote={handleOpenTrashNote}
+              onOpenKanbanCard={handleOpenTrashKanbanCard}
+            />
+          </ViewTransition>
         )}
         {sidebarView === 'todos' && (
-          <div className="kanban-workspace">
+          <ViewTransition
+            viewKey={`todos-${selectedKanbanGroupId ?? 'none'}-${selectedKanbanCardId ?? 'none'}`}
+            className="kanban-workspace-wrap"
+          >
+          <div
+            className={`kanban-workspace ${selectedKanbanCard ? '' : 'kanban-workspace--board-only'}`.trim()}
+          >
             {selectedKanbanGroup ? (
               <KanbanPanel
                 group={selectedKanbanGroup}
@@ -604,6 +831,7 @@ function AppContent({
                   if (selectedKanbanGroupId) store.createKanbanColumn(selectedKanbanGroupId, name);
                 }}
                 onRenameColumn={store.renameKanbanColumn}
+                onUpdateColumnColor={store.updateKanbanColumnColor}
                 onDeleteColumn={store.deleteKanbanColumn}
                 onCreateCard={(columnId, title) => {
                   if (!selectedKanbanGroupId) return;
@@ -611,6 +839,7 @@ function AppContent({
                   setSelectedKanbanCardId(card.id);
                 }}
                 onMoveCard={store.moveKanbanCard}
+                onMoveColumn={store.moveKanbanColumn}
                 onDeleteCard={(id) => {
                   store.deleteKanbanCard(id);
                   if (selectedKanbanCardId === id) setSelectedKanbanCardId(null);
@@ -624,55 +853,85 @@ function AppContent({
                 <p>{t('app.kanbanEmpty')}</p>
               </div>
             )}
-            {selectedKanbanCard && selectedKanbanGroup && selectedCardColumn ? (
+            {selectedKanbanCard && selectedKanbanGroup && selectedCardColumn && (
               <KanbanCardEditor
                 card={selectedKanbanCard}
                 groupName={getKanbanGroupDisplayName(selectedKanbanGroup.name, t)}
                 columnName={getKanbanColumnDisplayName(selectedCardColumn.name, t)}
+                tags={data.tags}
                 saveStatus={store.saveStatus}
                 onUpdateTitle={(title) => store.updateKanbanCard(selectedKanbanCard.id, { title })}
                 onUpdateContent={(content) =>
                   store.updateKanbanCard(selectedKanbanCard.id, { content })
                 }
-                onDueAtChange={(dueAt) =>
-                  store.updateKanbanCard(selectedKanbanCard.id, { dueAt })
-                }
                 onScheduledAtChange={(scheduledAt) =>
                   store.updateKanbanCard(selectedKanbanCard.id, { scheduledAt })
                 }
-                notes={data.notes}
+                onToggleTag={(tagId) => store.toggleKanbanCardTag(selectedKanbanCard.id, tagId)}
+                onCreateTag={store.createTag}
+                notes={activeNotes}
                 onLinkedNoteChange={(linkedNoteId) =>
                   store.updateKanbanCard(selectedKanbanCard.id, { linkedNoteId })
                 }
                 onOpenLinkedNote={openNote}
-              />
-            ) : (
-              <EmptyState
-                title={t('app.kanbanSelectCard')}
-                description={t('app.kanbanSelectCardDesc')}
-                icon={<CheckSquare size={48} strokeWidth={1.2} />}
+                onClose={() => setSelectedKanbanCardId(null)}
               />
             )}
           </div>
+          </ViewTransition>
         )}
-        {sidebarView === 'schedule' && (
-          <SchedulePanel
-            notes={data.notes}
-            kanbanCards={data.kanbanCards}
-            tags={data.tags}
-            selectedDay={scheduleSelectedDay}
-            onSelectDay={(day) => {
-              setScheduleSelectedDay(day);
-              setScheduleDayFilter(day);
-            }}
-            onOpenNote={openNoteInSchedule}
-            onOpenKanbanCard={openKanbanCard}
-            onCreateNoteForDay={handleCreateNoteForDay}
-            onAssignNoteToDay={handleAssignNoteToDay}
-            onToggleNoteFavorite={handleToggleFavorite}
-            onToggleNotePin={handleTogglePin}
-            onDeleteNote={handleDeleteNote}
-          />
+        {sidebarView === 'schedule' && (!selectedNote || schedulePanelOpen) && (
+          <>
+            {selectedNote && schedulePanelOpen && (
+              <button
+                type="button"
+                className="schedule-drawer-backdrop"
+                aria-label={t('schedule.hidePanel')}
+                onClick={() => setSchedulePanelOpen(false)}
+              />
+            )}
+            <ViewTransition
+              viewKey={
+                selectedNote
+                  ? `schedule-note-${selectedNote.id}`
+                  : `schedule-${scheduleSelectedDay ?? 'all'}`
+              }
+              className={`schedule-workspace${selectedNote ? ' schedule-workspace--drawer' : ''}`}
+            >
+              <SchedulePanel
+                notes={activeNotes}
+                kanbanCards={activeKanbanCards}
+                tags={data.tags}
+                selectedDay={scheduleSelectedDay}
+                onSelectDay={(day) => {
+                  setScheduleSelectedDay(day);
+                  setScheduleDayFilter(day);
+                }}
+                onOpenNote={openNoteInSchedule}
+                onOpenKanbanCard={openKanbanCard}
+                onCreateNoteForDay={handleCreateNoteForDay}
+                onAssignNoteToDay={handleAssignNoteToDay}
+                onToggleNoteFavorite={handleToggleFavorite}
+                onToggleNotePin={handleTogglePin}
+                onDeleteNote={handleDeleteNote}
+              />
+              {!selectedNote && (
+                <ScheduleListPanel
+                  notes={activeNotes}
+                  kanbanCards={activeKanbanCards}
+                  tags={data.tags}
+                  pageSize={scrollBatchSize}
+                  dayFilter={scheduleDayFilter}
+                  onClearDayFilter={() => setScheduleDayFilter(null)}
+                  onOpenNote={openNoteInSchedule}
+                  onOpenKanbanCard={openKanbanCard}
+                  onToggleNoteFavorite={handleToggleFavorite}
+                  onToggleNotePin={handleTogglePin}
+                  onDeleteNote={handleDeleteNote}
+                />
+              )}
+            </ViewTransition>
+          </>
         )}
         {showNoteList && (
           <NoteList
@@ -683,6 +942,8 @@ function AppContent({
             selectedNoteId={selectedNoteId}
             onSelect={handleSelectNote}
             onCreate={handleCreateNote}
+            onCreateFromTemplate={() => setTemplatePickerOpen(true)}
+            onDuplicate={handleDuplicateNote}
             onDelete={handleDeleteNote}
             onDeleteMany={handleDeleteNotes}
             onMoveMany={handleMoveNotes}
@@ -693,11 +954,12 @@ function AppContent({
             panelClassName={isFocusLayout && noteListDrawerOpen ? 'note-list-drawer' : undefined}
           />
         )}
-        {sidebarView !== 'todos' && sidebarView !== 'dashboard' && selectedNote ? (
+        {sidebarView !== 'todos' && sidebarView !== 'dashboard' && sidebarView !== 'trash' && selectedNote ? (
           <NoteEditor
             note={selectedNote}
             folders={data.folders}
             tags={data.tags}
+            allNotes={activeNotes}
             kanbanGroups={data.kanbanGroups}
             linkedKanbanCards={linkedKanbanForNote}
             saveStatus={store.saveStatus}
@@ -719,6 +981,8 @@ function AppContent({
               if (card) openKanbanCard(card.id, card.groupId);
             }}
             onOpenKanbanCard={openKanbanCard}
+            onOpenNote={openNote}
+            onDuplicate={() => handleDuplicateNote(selectedNote.id)}
             onOpenTodoView={() => {
               setSidebarView('todos');
               setGlobalAssetsOpen(false);
@@ -729,27 +993,30 @@ function AppContent({
             onAssetScrolled={() => setPendingAsset(null)}
             onBack={sidebarView === 'schedule' ? closeScheduleNote : undefined}
             backLabel={t('app.backToSchedule')}
+            schedulePanelToggle={
+              sidebarView === 'schedule'
+                ? { open: schedulePanelOpen, onToggle: () => setSchedulePanelOpen((o) => !o) }
+                : undefined
+            }
           />
-        ) : sidebarView !== 'todos' && sidebarView !== 'schedule' && sidebarView !== 'dashboard' ? (
+        ) : sidebarView !== 'todos' &&
+          sidebarView !== 'schedule' &&
+          sidebarView !== 'dashboard' &&
+          sidebarView !== 'trash' ? (
           <EmptyState />
-        ) : sidebarView === 'schedule' ? (
-          <ScheduleListPanel
-            notes={data.notes}
-            kanbanCards={data.kanbanCards}
-            tags={data.tags}
-            pageSize={scrollBatchSize}
-            dayFilter={scheduleDayFilter}
-            onClearDayFilter={() => setScheduleDayFilter(null)}
-            onOpenNote={openNoteInSchedule}
-            onOpenKanbanCard={openKanbanCard}
-            onToggleNoteFavorite={handleToggleFavorite}
-            onToggleNotePin={handleTogglePin}
-            onDeleteNote={handleDeleteNote}
-          />
         ) : null}
+        {globalAssetsOpen && isToolsView && (
+          <button
+            type="button"
+            className="global-assets-backdrop"
+            aria-label={t('globalAssets.closePanel')}
+            onClick={() => setGlobalAssetsOpen(false)}
+          />
+        )}
         {globalAssetsOpen && (
           <GlobalAssetsPanel
-            notes={data.notes}
+            notes={activeNotes}
+            overlay={isToolsView}
             onClose={() => setGlobalAssetsOpen(false)}
             onGoToAsset={handleGoToAsset}
           />
@@ -792,6 +1059,13 @@ function AppContent({
         />
       )}
 
+      {templatePickerOpen && (
+        <NoteTemplatePicker
+          onSelect={handleCreateFromTemplate}
+          onClose={() => setTemplatePickerOpen(false)}
+        />
+      )}
+
       {showSettings && (
         <SettingsModal
           theme={theme}
@@ -800,8 +1074,12 @@ function AppContent({
           locale={locale}
           timeZone={timeZone}
           uiZoomLevel={uiZoomLevel}
+          sidebarMode={sidebarMode}
+          scheduleRemindersEnabled={scheduleRemindersEnabled}
           onThemeChange={setTheme}
           onLayoutChange={setLayout}
+          onSidebarModeChange={setSidebarMode}
+          onScheduleRemindersEnabledChange={setScheduleRemindersEnabled}
           onScrollBatchSizeChange={setScrollBatchSize}
           onLocaleChange={setLocale}
           onTimeZoneChange={setTimeZone}
@@ -816,6 +1094,7 @@ function AppContent({
             await setLocale(s.locale);
             await setTimeZone(s.timeZone);
             await setUiZoomLevel(s.uiZoomLevel ?? 0);
+            await setSidebarMode(s.sidebarMode ?? 'expanded');
             await store.reload();
             setSelectedNoteId(null);
             setSelectedKanbanGroupId(null);

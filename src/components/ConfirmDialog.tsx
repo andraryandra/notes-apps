@@ -1,7 +1,8 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { AlertTriangle, Trash2 } from 'lucide-react';
 import { useI18n } from '../i18n/useI18n';
 import type { ConfirmVariant } from '../context/ConfirmContext';
+import { motionEnter, motionExit } from '../utils/motion';
 import './ConfirmDialog.css';
 
 interface Props {
@@ -25,30 +26,64 @@ export function ConfirmDialog({
 }: Props) {
   const { t } = useI18n();
   const confirmRef = useRef<HTMLButtonElement>(null);
+  const overlayRef = useRef<HTMLDivElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const closing = useRef(false);
+  const [visible, setVisible] = useState(true);
+
+  useEffect(() => {
+    if (overlayRef.current) motionEnter('fade', overlayRef.current);
+    if (dialogRef.current) motionEnter('dialog', dialogRef.current);
+  }, []);
 
   useEffect(() => {
     const timer = window.setTimeout(() => confirmRef.current?.focus(), 0);
     return () => window.clearTimeout(timer);
   }, []);
 
+  const closeWithAnim = (cb: () => void) => {
+    if (closing.current) return;
+    closing.current = true;
+    const dialog = dialogRef.current;
+    const overlay = overlayRef.current;
+    if (!dialog || !overlay) {
+      cb();
+      return;
+    }
+    motionExit('dialog', dialog, () => {
+      motionExit('fade', overlay, () => {
+        setVisible(false);
+        cb();
+      });
+    });
+  };
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         e.preventDefault();
-        onCancel();
+        closeWithAnim(onCancel);
       }
     };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
   }, [onCancel]);
 
+  if (!visible) return null;
+
   const paragraphs = message.split(/\n+/).filter(Boolean);
   const isDanger = variant === 'danger';
 
   return (
-    <div className="confirm-dialog-overlay" role="presentation" onClick={onCancel}>
+    <div
+      ref={overlayRef}
+      className="confirm-dialog-overlay motion-from-hidden"
+      role="presentation"
+      onClick={() => closeWithAnim(onCancel)}
+    >
       <div
-        className={`confirm-dialog ${isDanger ? 'confirm-dialog--danger' : ''}`}
+        ref={dialogRef}
+        className={`confirm-dialog motion-from-hidden ${isDanger ? 'confirm-dialog--danger' : ''}`}
         role="alertdialog"
         aria-modal="true"
         aria-labelledby="confirm-dialog-title"
@@ -74,7 +109,7 @@ export function ConfirmDialog({
           <button
             type="button"
             className="confirm-dialog-btn confirm-dialog-btn--cancel"
-            onClick={onCancel}
+            onClick={() => closeWithAnim(onCancel)}
           >
             {cancelLabel ?? t('common.cancel')}
           </button>
@@ -82,7 +117,7 @@ export function ConfirmDialog({
             ref={confirmRef}
             type="button"
             className={`confirm-dialog-btn confirm-dialog-btn--confirm ${isDanger ? 'is-danger' : ''}`}
-            onClick={onConfirm}
+            onClick={() => closeWithAnim(onConfirm)}
           >
             {confirmLabel ?? t('confirmDialog.confirm')}
           </button>

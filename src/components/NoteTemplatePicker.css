@@ -1,0 +1,62 @@
+.note-template-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.note-template-picker {
+  width: min(360px, 100%);
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  box-shadow: var(--shadow);
+}
+
+.note-template-picker h3 {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 14px;
+}
+
+.note-template-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.note-template-option {
+  width: 100%;
+  text-align: left;
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--bg-elevated);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.note-template-option:hover {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.note-template-cancel {
+  margin-top: 14px;
+  width: 100%;
+  padding: 10px;
+  font-size: 13px;
+  color: var(--text-muted);
+  border-radius: var(--radius-md);
+}
+
+.note-template-cancel:hover {
+  background: var(--bg-hover);
+}

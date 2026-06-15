@@ -1,3 +1,4 @@
+/// <reference types="vitest/config" />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import electron from 'vite-plugin-electron/simple';
@@ -40,7 +41,7 @@ export default defineConfig({
     strictPort: true,
   },
   optimizeDeps: {
-    include: ['pdfjs-dist'],
+    include: ['pdfjs-dist', 'animejs'],
   },
   plugins: [
     react(),
@@ -73,6 +74,10 @@ export default defineConfig({
   ],
   resolve: {
     alias: { '@': path.resolve(__dirname, 'src') },
+  },
+  test: {
+    environment: 'node',
+    include: ['src/**/*.test.ts'],
   },
   build: {
     target: 'es2020',

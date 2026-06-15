@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
-import { Star, Trash2, Pin, FolderInput } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import { Star, Trash2, Pin, FolderInput, Copy } from 'lucide-react';
 import { useI18n } from '../i18n/useI18n';
 import './NoteContextMenu.css';
 
@@ -17,7 +18,19 @@ interface Props {
   onToggleFavorite: (noteId: string) => void;
   onTogglePin: (noteId: string) => void;
   onDelete: (noteId: string) => void;
+  onDuplicate?: (noteId: string) => void;
   onMoveToFolder?: (noteId: string) => void;
+}
+
+const MENU_W = 200;
+const MENU_H = 208;
+
+function clampPosition(x: number, y: number) {
+  const pad = 8;
+  return {
+    x: Math.max(pad, Math.min(x, window.innerWidth - MENU_W - pad)),
+    y: Math.max(pad, Math.min(y, window.innerHeight - MENU_H - pad)),
+  };
 }
 
 export function NoteContextMenu({
@@ -26,6 +39,7 @@ export function NoteContextMenu({
   onToggleFavorite,
   onTogglePin,
   onDelete,
+  onDuplicate,
   onMoveToFolder,
 }: Props) {
   const { t } = useI18n();
@@ -43,10 +57,12 @@ export function NoteContextMenu({
 
   if (!menu) return null;
 
-  return (
+  const pos = clampPosition(menu.x, menu.y);
+
+  return createPortal(
     <div
       className="note-context-menu"
-      style={{ left: menu.x, top: menu.y }}
+      style={{ left: pos.x, top: pos.y }}
       onClick={(e) => e.stopPropagation()}
       onContextMenu={(e) => e.preventDefault()}
     >
@@ -82,6 +98,18 @@ export function NoteContextMenu({
           {t('noteContextMenu.moveToFolder')}
         </button>
       )}
+      {onDuplicate && (
+        <button
+          type="button"
+          onClick={() => {
+            onDuplicate(menu.noteId);
+            onClose();
+          }}
+        >
+          <Copy size={16} />
+          {t('noteContextMenu.duplicate')}
+        </button>
+      )}
       <button
         type="button"
         className="note-context-menu-danger"
@@ -93,6 +121,7 @@ export function NoteContextMenu({
         <Trash2 size={16} />
         {t('noteContextMenu.delete')}
       </button>
-    </div>
+    </div>,
+    document.body
   );
 }

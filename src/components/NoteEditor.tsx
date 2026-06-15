@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, memo, useRef } from 'react';
-import { Star, PanelRightOpen, PanelRightClose, ArrowLeft, Pin, Download } from 'lucide-react';
+import { Star, PanelRightOpen, PanelRightClose, PanelLeftOpen, PanelLeftClose, ArrowLeft, Pin, Download, Copy } from 'lucide-react';
 import type { Editor } from '@tiptap/react';
 import { PreviewProvider } from '../context/PreviewContext';
 import { RichEditor } from './RichEditor';
@@ -20,6 +20,7 @@ interface Props {
   note: Note;
   folders: Folder[];
   tags: Tag[];
+  allNotes: Note[];
   saveStatus: SaveStatus;
   onUpdateTitle: (title: string) => void;
   onUpdateContent: (content: string) => void;
@@ -33,11 +34,14 @@ interface Props {
   onScheduledAtChange: (scheduledAt: number | null) => void;
   onCreateLinkedKanbanCard: (title: string, groupId: string) => void;
   onOpenKanbanCard: (cardId: string, groupId: string) => void;
+  onOpenNote: (noteId: string) => void;
+  onDuplicate: () => void;
   onOpenTodoView: () => void;
   scrollToAsset?: ParsedNoteAsset | null;
   onAssetScrolled?: () => void;
   onBack?: () => void;
   backLabel?: string;
+  schedulePanelToggle?: { open: boolean; onToggle: () => void };
 }
 
 function saveStatusLabel(status: SaveStatus, t: (key: string) => string): string | null {
@@ -55,6 +59,7 @@ export const NoteEditor = memo(function NoteEditor({
   note,
   folders,
   tags,
+  allNotes,
   saveStatus,
   onUpdateTitle,
   onUpdateContent,
@@ -68,11 +73,14 @@ export const NoteEditor = memo(function NoteEditor({
   onScheduledAtChange,
   onCreateLinkedKanbanCard,
   onOpenKanbanCard,
+  onOpenNote,
+  onDuplicate,
   onOpenTodoView,
   scrollToAsset,
   onAssetScrolled,
   onBack,
   backLabel,
+  schedulePanelToggle,
 }: Props) {
   const { t } = useI18n();
   const resolvedBackLabel = backLabel ?? t('noteEditor.back');
@@ -127,6 +135,21 @@ export const NoteEditor = memo(function NoteEditor({
     <div className="note-editor-wrap">
     <main className="note-editor">
       <header className="note-editor-header">
+        {schedulePanelToggle && (
+          <button
+            type="button"
+            className={`note-editor-schedule-toggle ${schedulePanelToggle.open ? 'active' : ''}`}
+            onClick={schedulePanelToggle.onToggle}
+            title={
+              schedulePanelToggle.open ? t('schedule.hidePanel') : t('schedule.showPanel')
+            }
+            aria-label={
+              schedulePanelToggle.open ? t('schedule.hidePanel') : t('schedule.showPanel')
+            }
+          >
+            {schedulePanelToggle.open ? <PanelLeftClose size={18} /> : <PanelLeftOpen size={18} />}
+          </button>
+        )}
         {onBack && (
           <button type="button" className="note-editor-back" onClick={onBack} title={resolvedBackLabel}>
             <ArrowLeft size={18} />
@@ -188,6 +211,14 @@ export const NoteEditor = memo(function NoteEditor({
           </div>
           <button
             type="button"
+            className="note-panel-toggle"
+            onClick={onDuplicate}
+            title={t('noteEditor.duplicate')}
+          >
+            <Copy size={20} />
+          </button>
+          <button
+            type="button"
             className={`fav-btn pin-header-btn ${note.pinned ? 'active' : ''}`}
             onClick={onTogglePin}
             title={note.pinned ? t('noteEditor.unpin') : t('noteEditor.pin')}
@@ -225,6 +256,9 @@ export const NoteEditor = memo(function NoteEditor({
           noteTagIds={note.tagIds}
           onToggleTag={onToggleTag}
           onEditorReady={handleEditorReady}
+          notes={allNotes}
+          currentNoteId={note.id}
+          onOpenNote={onOpenNote}
         />
     </main>
     {assetsOpen && (

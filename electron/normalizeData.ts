@@ -1,11 +1,13 @@
 import type { AppData, KanbanCard, KanbanColumn, KanbanGroup, Note, TodoItem, TodoStatus } from '../src/types';
+import { pickKanbanColumnColor } from '../src/utils/kanbanColumnColors';
 import { migrateTodosToKanban } from '../src/utils/kanbanMigrate';
 
-function normalizeNote(raw: Note & { scheduledAt?: number | null; pinned?: boolean }): Note {
+function normalizeNote(raw: Note & { scheduledAt?: number | null; pinned?: boolean; deletedAt?: number | null }): Note {
   return {
     ...raw,
     scheduledAt: raw.scheduledAt ?? null,
     pinned: raw.pinned ?? false,
+    deletedAt: raw.deletedAt ?? null,
   };
 }
 
@@ -27,14 +29,24 @@ function normalizeTodo(raw: TodoItem & { status?: TodoStatus }): TodoItem {
   };
 }
 
-function normalizeKanbanCard(raw: KanbanCard): KanbanCard {
+function normalizeKanbanCard(raw: KanbanCard & { tagIds?: string[]; deletedAt?: number | null }): KanbanCard {
+  const scheduledAt = raw.scheduledAt ?? raw.dueAt ?? null;
   return {
     ...raw,
     content: raw.content ?? '',
-    dueAt: raw.dueAt ?? null,
-    scheduledAt: raw.scheduledAt ?? null,
+    dueAt: null,
+    scheduledAt,
+    tagIds: raw.tagIds ?? [],
     linkedNoteId: raw.linkedNoteId ?? null,
     order: raw.order ?? 0,
+    deletedAt: raw.deletedAt ?? null,
+  };
+}
+
+function normalizeKanbanColumn(raw: KanbanColumn & { color?: string }): KanbanColumn {
+  return {
+    ...raw,
+    color: raw.color && raw.color.trim() ? raw.color : pickKanbanColumnColor(raw.order ?? 0),
   };
 }
 
@@ -46,7 +58,9 @@ export function normalizeAppData(raw: Partial<AppData> & { notes?: Note[] }): Ap
     tags: raw.tags ?? [],
     todos: migrated.todos,
     kanbanGroups: migrated.kanbanGroups.map((g) => ({ ...g })),
-    kanbanColumns: (migrated.kanbanColumns as KanbanColumn[]).sort((a, b) => a.order - b.order),
+    kanbanColumns: (migrated.kanbanColumns as KanbanColumn[])
+      .sort((a, b) => a.order - b.order)
+      .map((c) => normalizeKanbanColumn(c)),
     kanbanCards: migrated.kanbanCards.map((c) => normalizeKanbanCard(c)),
   };
 }

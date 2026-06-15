@@ -1,12 +1,10 @@
 /* Mode tampilan (layout) */
 
 [data-layout='wide'] {
-  --sidebar-width: 220px;
   --list-width: 232px;
 }
 
 [data-layout='compact'] {
-  --sidebar-width: 228px;
   --list-width: 248px;
   --radius-md: 8px;
   --radius-lg: 11px;
@@ -20,9 +18,9 @@
   font-size: 14px;
 }
 
-[data-layout='compact'] .sidebar-nav .nav-item {
-  padding: 8px 10px;
-  font-size: 13px;
+[data-layout='compact'] .sidebar-rail-btn {
+  width: 40px;
+  height: 40px;
 }
 
 [data-layout='compact'] .editor-toolbar {
@@ -44,10 +42,9 @@
   min-height: 0;
 }
 
-/* Saat scroll daftar catatan: jangan repaint editor TipTap (berat di layar besar) */
+/* Saat scroll daftar catatan: kurangi interaksi editor (tanpa content-visibility agar TipTap tetap ter-render) */
 .app-body.is-list-scrolling .note-editor-wrap {
-  content-visibility: hidden;
-  contain: layout paint;
+  pointer-events: none;
 }
 
 .app.is-settings-open .app-body {

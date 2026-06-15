@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useRef, useEffect } from 'react';
 import { Search } from 'lucide-react';
 import { PreviewProvider, usePreview } from '../context/PreviewContext';
 import { AssetsPanel } from './AssetsPanel';
@@ -12,14 +12,16 @@ import {
   type GlobalNoteAsset,
 } from '../utils/parseGlobalNoteAssets';
 import type { ParsedNoteAsset } from '../utils/parseNoteAssets';
+import { motionEnter } from '../utils/motion';
 
 interface Props {
   notes: Note[];
+  overlay?: boolean;
   onClose: () => void;
   onGoToAsset: (noteId: string, asset: ParsedNoteAsset) => void;
 }
 
-function GlobalAssetsPanelInner({ notes, onClose, onGoToAsset }: Props) {
+function GlobalAssetsPanelInner({ notes, overlay, onClose, onGoToAsset }: Props) {
   const { t } = useI18n();
   const filterOptions = useNoteAssetFilterOptions();
   const fileKindOptions = useFileKindFilterOptions();
@@ -27,6 +29,14 @@ function GlobalAssetsPanelInner({ notes, onClose, onGoToAsset }: Props) {
   const [filter, setFilter] = useState<AssetTypeFilter>('all');
   const [fileKindFilter, setFileKindFilter] = useState<AssetFileKindFilter>('all');
   const [query, setQuery] = useState('');
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = panelRef.current?.querySelector('.note-assets-sidebar--global') as HTMLElement | null;
+    if (!el) return;
+    el.classList.add('motion-from-hidden');
+    motionEnter('viewPanel', el);
+  }, []);
 
   const { items, counts, fileKindCounts } = useMemo(() => parseGlobalNoteAssets(notes), [notes]);
   const visible = useMemo(
@@ -84,9 +94,10 @@ function GlobalAssetsPanelInner({ notes, onClose, onGoToAsset }: Props) {
       : t('globalAssets.emptyFilter');
 
   return (
+    <div ref={panelRef}>
     <AssetsPanel
       title={t('globalAssets.title')}
-      className="note-assets-sidebar--global"
+      className={`note-assets-sidebar--global ${overlay ? 'note-assets-sidebar--overlay' : ''}`.trim()}
       items={listItems}
       counts={counts}
       filter={filter}
@@ -114,6 +125,7 @@ function GlobalAssetsPanelInner({ notes, onClose, onGoToAsset }: Props) {
         </div>
       }
     />
+    </div>
   );
 }
 

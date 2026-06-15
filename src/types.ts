@@ -22,6 +22,8 @@ export interface Note {
   pinned: boolean;
   /** Jadwal tampil di panel Jadwal (unix ms), null = tanpa jadwal */
   scheduledAt: number | null;
+  /** null = aktif; unix ms = di tempat sampah */
+  deletedAt: number | null;
   createdAt: number;
   updatedAt: number;
 }
@@ -55,6 +57,8 @@ export interface KanbanColumn {
   groupId: string;
   name: string;
   order: number;
+  /** Warna aksen kolom (hex, mis. #8b5cf6) */
+  color: string;
 }
 
 /** Kartu kanban — berisi catatan (content) langsung di kartu */
@@ -66,10 +70,15 @@ export interface KanbanCard {
   /** Isi catatan rich-text (HTML), sama seperti Note.content */
   content: string;
   order: number;
+  /** @deprecated Gunakan scheduledAt — digabung saat migrasi */
   dueAt: number | null;
+  /** Jadwal tampil di panel Jadwal (unix ms), null = tanpa jadwal */
   scheduledAt: number | null;
+  tagIds: string[];
   /** Opsional: tautan ke catatan di daftar Semua Catatan */
   linkedNoteId: string | null;
+  /** null = aktif; unix ms = di tempat sampah */
+  deletedAt: number | null;
   createdAt: number;
   updatedAt: number;
 }
@@ -98,7 +107,8 @@ export type SidebarView =
   | 'folder'
   | 'tag'
   | 'todos'
-  | 'schedule';
+  | 'schedule'
+  | 'trash';
 
 export type {
   AppTheme,
@@ -187,6 +197,14 @@ export type UpdaterCheckResult =
   | { status: 'available'; currentVersion: string; version: string }
   | { status: 'error'; message: string };
 
+export interface ScheduleReminderPayload {
+  kind: 'note' | 'kanban';
+  title: string;
+  noteId?: string;
+  kanbanCardId?: string;
+  groupId?: string;
+}
+
 export interface ElectronAPI {
   platform: NodeJS.Platform;
   loadData: () => Promise<AppData>;
@@ -250,6 +268,8 @@ export interface ElectronAPI {
     plainText: string;
     format: NoteExportFormat;
   }) => Promise<NoteExportResult>;
+  showScheduleReminder: (payload: ScheduleReminderPayload) => Promise<boolean>;
+  onScheduleReminderOpen: (callback: (payload: ScheduleReminderPayload) => void) => () => void;
 }
 
 declare global {

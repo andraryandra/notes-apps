@@ -1,4 +1,4 @@
-import { useMemo, memo, type ReactNode } from 'react';
+import { useMemo, memo, useRef, type ReactNode } from 'react';
 import {
   FileText,
   Star,
@@ -31,6 +31,7 @@ import {
   SegmentLegend,
 } from './DashboardCharts';
 import { DashboardBrowseList } from './DashboardBrowse';
+import { useStaggerList } from '../hooks/useStaggerList';
 import './DashboardPanel.css';
 import './DashboardBrowse.css';
 
@@ -123,7 +124,7 @@ export const DashboardPanel = memo(function DashboardPanel({
   const favoritesCount = useMemo(() => notes.filter((n) => n.favorite).length, [notes]);
   const scheduledNotes = useMemo(() => notes.filter((n) => n.scheduledAt).length, [notes]);
   const scheduledCards = useMemo(
-    () => kanbanCards.filter((c) => c.scheduledAt || c.dueAt).length,
+    () => kanbanCards.filter((c) => c.scheduledAt).length,
     [kanbanCards]
   );
   const scheduleTotal = scheduledNotes + scheduledCards;
@@ -134,7 +135,7 @@ export const DashboardPanel = memo(function DashboardPanel({
       if (note.scheduledAt && isToday(note.scheduledAt, dt.timeZone)) n++;
     }
     for (const card of kanbanCards) {
-      const at = card.scheduledAt ?? card.dueAt;
+      const at = card.scheduledAt;
       if (at && isToday(at, dt.timeZone)) n++;
     }
     return n;
@@ -193,6 +194,9 @@ export const DashboardPanel = memo(function DashboardPanel({
   const todoSpark = activity.map((d) => d.cards);
 
   const todayLabel = dt.formatDayHeading(dt.startOfDay(Date.now()));
+  const gridRef = useRef<HTMLDivElement>(null);
+
+  useStaggerList(`dash-${notes.length}`, gridRef, '.dash-stat', 40, 'card');
 
   return (
     <div className="dashboard-panel">
@@ -219,7 +223,7 @@ export const DashboardPanel = memo(function DashboardPanel({
         </div>
       </div>
 
-      <div className="dashboard-grid">
+      <div className="dashboard-grid" ref={gridRef}>
         <StatCard
           accent="violet"
           icon={<FileText size={20} />}
