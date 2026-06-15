@@ -117,6 +117,8 @@ function AppContent({
     uiZoomLevel,
     setUiZoomLevel,
     adjustUiZoomLevel,
+    sidebarMode,
+    setSidebarMode,
     ready,
   } = appearance;
   const [noteListDrawerOpen, setNoteListDrawerOpen] = useState(false);
@@ -542,6 +544,8 @@ function AppContent({
           />
         )}
         <Sidebar
+          mode={sidebarMode}
+          onModeChange={setSidebarMode}
           folders={data.folders}
           tags={data.tags}
           searchQuery={searchQuery}
@@ -797,8 +801,10 @@ function AppContent({
           locale={locale}
           timeZone={timeZone}
           uiZoomLevel={uiZoomLevel}
+          sidebarMode={sidebarMode}
           onThemeChange={setTheme}
           onLayoutChange={setLayout}
+          onSidebarModeChange={setSidebarMode}
           onScrollBatchSizeChange={setScrollBatchSize}
           onLocaleChange={setLocale}
           onTimeZoneChange={setTimeZone}
@@ -813,6 +819,7 @@ function AppContent({
             await setLocale(s.locale);
             await setTimeZone(s.timeZone);
             await setUiZoomLevel(s.uiZoomLevel ?? 0);
+            await setSidebarMode(s.sidebarMode ?? 'expanded');
             await store.reload();
             setSelectedNoteId(null);
             setSelectedKanbanGroupId(null);

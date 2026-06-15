@@ -7,11 +7,13 @@ import { createTranslator } from '../i18n/translator';
 import {
   THEME_OPTIONS,
   LAYOUT_OPTIONS,
+  SIDEBAR_MODES,
   APP_LOCALES,
   uiZoomPercent,
   type AppLocale,
   type AppTheme,
   type AppLayoutMode,
+  type SidebarMode,
 } from '../config/appearance';
 import { SCROLL_BATCH_SIZES, SQLITE_DB_NAME, type ScrollBatchSize } from '../config/storage';
 import { APP_TIME_ZONES, formatTimeZoneLabel, isValidTimeZone } from '../config/timezones';
@@ -36,8 +38,10 @@ interface Props {
   locale: AppLocale;
   timeZone: string;
   uiZoomLevel: number;
+  sidebarMode: SidebarMode;
   onThemeChange: (t: AppTheme) => void;
   onLayoutChange: (l: AppLayoutMode) => void;
+  onSidebarModeChange: (mode: SidebarMode) => void;
   onScrollBatchSizeChange: (size: ScrollBatchSize) => void;
   onLocaleChange: (locale: AppLocale) => void;
   onTimeZoneChange: (timeZone: string) => void;
@@ -66,8 +70,10 @@ export function SettingsModal({
   locale,
   timeZone,
   uiZoomLevel,
+  sidebarMode,
   onThemeChange,
   onLayoutChange,
+  onSidebarModeChange,
   onScrollBatchSizeChange,
   onLocaleChange,
   onTimeZoneChange,
@@ -415,6 +421,28 @@ export function SettingsModal({
               >
                 <span className="layout-card-label">{t(`appearance.layout.${l.id}.label`)}</span>
                 <span className="layout-card-desc">{t(`appearance.layout.${l.id}.desc`)}</span>
+              </button>
+            ))}
+          </div>
+        </section>
+
+        <section className="settings-section">
+          <h3>{t('settings.sidebarMode')}</h3>
+          <p className="settings-info-text">{t('settings.sidebarModeDesc')}</p>
+          <div className="layout-grid">
+            {SIDEBAR_MODES.map((mode) => (
+              <button
+                key={mode}
+                type="button"
+                className={`layout-card ${sidebarMode === mode ? 'active' : ''}`}
+                onClick={async () => {
+                  await onSidebarModeChange(mode);
+                  const label = t(`appearance.sidebar.${mode}.label`);
+                  showSuccess(t('settings.sidebarModeApplied', { label }));
+                }}
+              >
+                <span className="layout-card-label">{t(`appearance.sidebar.${mode}.label`)}</span>
+                <span className="layout-card-desc">{t(`appearance.sidebar.${mode}.desc`)}</span>
               </button>
             ))}
           </div>

@@ -36,6 +36,10 @@ export const APP_LAYOUTS = ['standard', 'focus', 'wide', 'compact'] as const;
 
 export type AppLayoutMode = (typeof APP_LAYOUTS)[number];
 
+export const SIDEBAR_MODES = ['expanded', 'rail'] as const;
+
+export type SidebarMode = (typeof SIDEBAR_MODES)[number];
+
 export const APP_LOCALES = ['id', 'en'] as const;
 
 export type AppLocale = (typeof APP_LOCALES)[number];
@@ -51,6 +55,8 @@ export interface AppSettings {
   timeZone: string;
   /** Level zoom Electron (0 = 100%, negatif = lebih kecil) */
   uiZoomLevel: number;
+  /** Tampilan sidebar: penuh atau icon rail */
+  sidebarMode: SidebarMode;
 }
 
 export const MIN_UI_ZOOM_LEVEL = -5;
@@ -64,10 +70,15 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   locale: 'id',
   timeZone: detectSystemTimeZone(),
   uiZoomLevel: DEFAULT_UI_ZOOM_LEVEL,
+  sidebarMode: 'expanded',
 };
 
 export function isAppTheme(value: unknown): value is AppTheme {
   return typeof value === 'string' && (APP_THEMES as readonly string[]).includes(value);
+}
+
+export function isSidebarMode(value: unknown): value is SidebarMode {
+  return typeof value === 'string' && (SIDEBAR_MODES as readonly string[]).includes(value);
 }
 
 export function isAppLayout(value: unknown): value is AppLayoutMode {

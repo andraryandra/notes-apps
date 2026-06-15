@@ -6,6 +6,7 @@ import {
   isAppLocale,
   isAppTheme,
   isAppTimeZone,
+  isSidebarMode,
   isUiZoomLevel,
   type AppSettings,
 } from '../src/config/appearance';
@@ -37,6 +38,9 @@ export function loadSettings(settingsPath: string): AppSettings {
       uiZoomLevel: isUiZoomLevel(raw.uiZoomLevel)
         ? clampUiZoomLevel(raw.uiZoomLevel)
         : DEFAULT_APP_SETTINGS.uiZoomLevel,
+      sidebarMode: isSidebarMode(raw.sidebarMode)
+        ? raw.sidebarMode
+        : DEFAULT_APP_SETTINGS.sidebarMode,
     };
   } catch {
     /* ignore */

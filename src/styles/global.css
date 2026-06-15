@@ -12,6 +12,19 @@
   --titlebar-height: 38px;
 }
 
+/* Override lebar sidebar — harus setelah :root agar tidak tertimpa */
+html[data-sidebar-mode='rail'] {
+  --sidebar-width: 64px;
+}
+
+html[data-layout='wide']:not([data-sidebar-mode='rail']) {
+  --sidebar-width: 220px;
+}
+
+html[data-layout='compact']:not([data-sidebar-mode='rail']) {
+  --sidebar-width: 228px;
+}
+
 * {
   box-sizing: border-box;
   margin: 0;

@@ -96,8 +96,14 @@ export const en: TranslationTree = {
     folders: 'Folders',
     tags: 'Tags',
     noTags: 'No tags yet',
+    navLabel: 'Main menu',
+    closePanel: 'Close panel',
+    deleteTag: 'Delete tag',
+    expandSidebar: 'Expand sidebar',
+    collapseToRail: 'Collapse to icons',
   },
   globalSearch: {
+    title: 'Search notes',
     placeholder: 'Search notes in all folders...',
   },
   titleBar: {
@@ -475,6 +481,8 @@ export const en: TranslationTree = {
     zoomOut: 'Zoom out',
     zoomReset: 'Reset',
     layout: 'Layout mode',
+    sidebarMode: 'Sidebar display',
+    sidebarModeDesc: 'Full sidebar with labels, or compact icon rail with tooltips.',
     theme: 'Color theme',
     themeDesc: '14 themes — dark, light, and modern palettes.',
     scroll: 'Infinite scroll',
@@ -512,6 +520,7 @@ export const en: TranslationTree = {
     shortcutCol: 'Shortcut',
     functionCol: 'Action',
     layoutApplied: '{{label}} layout applied',
+    sidebarModeApplied: '{{label}} sidebar applied',
     themeApplied: '{{label}} theme applied',
     backupExported: 'Backup exported successfully',
     restoreDone: 'Restore completed',
@@ -562,6 +571,10 @@ export const en: TranslationTree = {
       focus: { label: 'Focus', desc: 'Wide editor; list opens as drawer' },
       wide: { label: 'Wide', desc: 'Narrower side panels, wider editor' },
       compact: { label: 'Compact', desc: 'Tighter spacing and panels' },
+    },
+    sidebar: {
+      expanded: { label: 'Full', desc: 'Menus, folders, tags, and kanban visible inline' },
+      rail: { label: 'Icons', desc: 'Icon-only with tooltips; flyout panels for folders & tags' },
     },
     theme: {
       dark: { label: 'Dark', desc: 'Classic purple dark' },

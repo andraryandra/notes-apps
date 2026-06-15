@@ -94,8 +94,14 @@ export const id = {
     folders: 'Folder',
     tags: 'Tag',
     noTags: 'Belum ada tag',
+    navLabel: 'Menu utama',
+    closePanel: 'Tutup panel',
+    deleteTag: 'Hapus tag',
+    expandSidebar: 'Perluas sidebar',
+    collapseToRail: 'Ciutkan ke ikon',
   },
   globalSearch: {
+    title: 'Cari catatan',
     placeholder: 'Cari catatan di semua folder...',
   },
   titleBar: {
@@ -473,6 +479,8 @@ export const id = {
     zoomOut: 'Perkecil',
     zoomReset: 'Reset',
     layout: 'Mode tampilan',
+    sidebarMode: 'Tampilan sidebar',
+    sidebarModeDesc: 'Sidebar penuh dengan label, atau mode ikon ringkas dengan tooltip.',
     theme: 'Tema warna',
     themeDesc: '14 tema — gelap, terang, dan nuansa modern.',
     scroll: 'Infinite scroll',
@@ -511,6 +519,7 @@ export const id = {
     shortcutCol: 'Pintasan',
     functionCol: 'Fungsi',
     layoutApplied: 'Tampilan {{label}} diterapkan',
+    sidebarModeApplied: 'Sidebar {{label}} diterapkan',
     themeApplied: 'Tema {{label}} diterapkan',
     backupExported: 'Backup berhasil diekspor',
     restoreDone: 'Restore berhasil',
@@ -561,6 +570,10 @@ export const id = {
       focus: { label: 'Fokus', desc: 'Editor lebar; daftar bisa dibuka sementara' },
       wide: { label: 'Lebar', desc: 'Panel samping lebih sempit, editor lebih luas' },
       compact: { label: 'Kompak', desc: 'Jarak dan panel lebih rapat' },
+    },
+    sidebar: {
+      expanded: { label: 'Penuh', desc: 'Menu, folder, tag, dan kanban terlihat langsung' },
+      rail: { label: 'Ikon', desc: 'Hanya ikon dengan tooltip; panel flyout untuk folder & tag' },
     },
     theme: {
       dark: { label: 'Dark', desc: 'Ungu gelap klasik' },
