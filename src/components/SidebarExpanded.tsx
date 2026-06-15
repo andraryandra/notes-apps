@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { Star, FileText, Tag, Plus, LayoutGrid, CheckSquare, Calendar, LayoutDashboard, PanelLeftClose } from 'lucide-react';
+import { Star, FileText, Tag, Plus, LayoutGrid, CheckSquare, Calendar, LayoutDashboard, PanelLeftClose, Trash2 } from 'lucide-react';
 import { GlobalSearch } from './GlobalSearch';
 import { FolderTree } from './FolderTree';
 import { KanbanTree } from './KanbanTree';
@@ -98,6 +98,15 @@ export function SidebarExpanded({
           <Calendar size={18} />
           <span>{t('sidebar.schedule')}</span>
           <span className="nav-badge">{noteCounts.schedule}</span>
+        </button>
+        <button
+          type="button"
+          className={`nav-item ${sidebarView === 'trash' ? 'active' : ''}`}
+          onClick={() => onViewChange('trash')}
+        >
+          <Trash2 size={18} />
+          <span>{t('sidebar.trash')}</span>
+          {noteCounts.trash > 0 && <span className="nav-badge">{noteCounts.trash}</span>}
         </button>
         <button
           type="button"

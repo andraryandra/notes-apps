@@ -1,4 +1,14 @@
-import { app, BrowserWindow, ipcMain, dialog, protocol, clipboard, shell, type WebContents } from 'electron';
+import {
+  app,
+  BrowserWindow,
+  ipcMain,
+  dialog,
+  protocol,
+  clipboard,
+  shell,
+  Notification,
+  type WebContents,
+} from 'electron';
 import path from 'path';
 import fs from 'fs';
 import { Readable } from 'node:stream';
@@ -25,7 +35,7 @@ import {
 } from './storedUrl';
 import { originalDisplayName } from './storedFileName';
 import { registerNewStoredFile } from './storage/storedFilesRepo';
-import type { StoredFileKind } from '../src/types';
+import type { ScheduleReminderPayload, StoredFileKind } from '../src/types';
 import {
   buildStoragePaths,
   ensureStorageDirs,
@@ -702,6 +712,21 @@ ipcMain.handle('clipboard:readImage', () => {
   return saveImageFile('clipboard.png', png.length, (dest) => {
     fs.writeFileSync(dest, png);
   });
+});
+
+ipcMain.handle('notification:schedule', (_e, payload: ScheduleReminderPayload) => {
+  if (!Notification.isSupported()) return false;
+  const notification = new Notification({
+    title: 'Jadwal',
+    body: payload.title,
+  });
+  notification.on('click', () => {
+    mainWindow?.show();
+    mainWindow?.focus();
+    mainWindow?.webContents.send('schedule:open', payload);
+  });
+  notification.show();
+  return true;
 });
 
 ipcMain.handle('settings:load', () => loadSettings(SETTINGS_FILE()));

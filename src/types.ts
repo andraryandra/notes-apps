@@ -22,6 +22,8 @@ export interface Note {
   pinned: boolean;
   /** Jadwal tampil di panel Jadwal (unix ms), null = tanpa jadwal */
   scheduledAt: number | null;
+  /** null = aktif; unix ms = di tempat sampah */
+  deletedAt: number | null;
   createdAt: number;
   updatedAt: number;
 }
@@ -75,6 +77,8 @@ export interface KanbanCard {
   tagIds: string[];
   /** Opsional: tautan ke catatan di daftar Semua Catatan */
   linkedNoteId: string | null;
+  /** null = aktif; unix ms = di tempat sampah */
+  deletedAt: number | null;
   createdAt: number;
   updatedAt: number;
 }
@@ -103,7 +107,8 @@ export type SidebarView =
   | 'folder'
   | 'tag'
   | 'todos'
-  | 'schedule';
+  | 'schedule'
+  | 'trash';
 
 export type {
   AppTheme,
@@ -192,6 +197,14 @@ export type UpdaterCheckResult =
   | { status: 'available'; currentVersion: string; version: string }
   | { status: 'error'; message: string };
 
+export interface ScheduleReminderPayload {
+  kind: 'note' | 'kanban';
+  title: string;
+  noteId?: string;
+  kanbanCardId?: string;
+  groupId?: string;
+}
+
 export interface ElectronAPI {
   platform: NodeJS.Platform;
   loadData: () => Promise<AppData>;
@@ -255,6 +268,8 @@ export interface ElectronAPI {
     plainText: string;
     format: NoteExportFormat;
   }) => Promise<NoteExportResult>;
+  showScheduleReminder: (payload: ScheduleReminderPayload) => Promise<boolean>;
+  onScheduleReminderOpen: (callback: (payload: ScheduleReminderPayload) => void) => () => void;
 }
 
 declare global {

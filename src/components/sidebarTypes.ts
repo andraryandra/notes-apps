@@ -14,7 +14,7 @@ export interface SidebarProps {
   onDeleteFolder: (id: string) => void;
   onCreateTag: () => void;
   onDeleteTag: (id: string) => void;
-  noteCounts: { all: number; favorites: number; todosActive: number; schedule: number };
+  noteCounts: { all: number; favorites: number; todosActive: number; schedule: number; trash: number };
   globalAssetsOpen: boolean;
   globalAssetCount: number;
   onToggleGlobalAssets: () => void;

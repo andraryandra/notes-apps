@@ -12,6 +12,7 @@ import {
   Folder as FolderIcon,
   FolderPlus,
   PanelLeftOpen,
+  Trash2,
 } from 'lucide-react';
 import { GlobalSearch } from './GlobalSearch';
 import { FolderTree } from './FolderTree';
@@ -161,6 +162,17 @@ export function SidebarRail(props: Props) {
               aria-label={t('sidebar.schedule')}
             >
               <Calendar size={20} strokeWidth={2} />
+            </button>
+          </SidebarTooltip>
+
+          <SidebarTooltip label={t('sidebar.trash')} badge={noteCounts.trash || undefined}>
+            <button
+              type="button"
+              className={`sidebar-rail-btn ${sidebarView === 'trash' ? 'active' : ''}`}
+              onClick={() => onViewChange('trash')}
+              aria-label={t('sidebar.trash')}
+            >
+              <Trash2 size={20} strokeWidth={2} />
             </button>
           </SidebarTooltip>
 

@@ -80,10 +80,42 @@ export function migrateTodosToKanban(
       scheduledAt: t.dueAt ?? null,
       tagIds: [],
       linkedNoteId: t.noteId ?? null,
+      deletedAt: null,
       createdAt: t.createdAt,
       updatedAt: t.updatedAt,
     };
   });
 
   return { kanbanGroups, kanbanColumns, kanbanCards, todos: [] };
+}
+
+export interface KanbanOrderUpdate {
+  id: string;
+  order: number;
+}
+
+/** Sisipkan kartu di kolom dan renumber order 0..n-1 */
+export function computeKanbanCardOrders(
+  cards: KanbanCard[],
+  cardId: string,
+  columnId: string,
+  insertBeforeCardId?: string | null
+): KanbanOrderUpdate[] | null {
+  const moving = cards.find((c) => c.id === cardId);
+  if (!moving) return null;
+
+  const inCol = cards
+    .filter((c) => c.columnId === columnId && c.deletedAt == null && c.id !== cardId)
+    .sort((a, b) => a.order - b.order);
+
+  let insertIdx = inCol.length;
+  if (insertBeforeCardId) {
+    const idx = inCol.findIndex((c) => c.id === insertBeforeCardId);
+    if (idx >= 0) insertIdx = idx;
+  }
+
+  const reordered = [...inCol];
+  reordered.splice(insertIdx, 0, { ...moving, columnId });
+
+  return reordered.map((c, i) => ({ id: c.id, order: i }));
 }

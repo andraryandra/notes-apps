@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, memo, useRef } from 'react';
-import { Star, PanelRightOpen, PanelRightClose, PanelLeftOpen, PanelLeftClose, ArrowLeft, Pin, Download } from 'lucide-react';
+import { Star, PanelRightOpen, PanelRightClose, PanelLeftOpen, PanelLeftClose, ArrowLeft, Pin, Download, Copy } from 'lucide-react';
 import type { Editor } from '@tiptap/react';
 import { PreviewProvider } from '../context/PreviewContext';
 import { RichEditor } from './RichEditor';
@@ -20,6 +20,7 @@ interface Props {
   note: Note;
   folders: Folder[];
   tags: Tag[];
+  allNotes: Note[];
   saveStatus: SaveStatus;
   onUpdateTitle: (title: string) => void;
   onUpdateContent: (content: string) => void;
@@ -33,6 +34,8 @@ interface Props {
   onScheduledAtChange: (scheduledAt: number | null) => void;
   onCreateLinkedKanbanCard: (title: string, groupId: string) => void;
   onOpenKanbanCard: (cardId: string, groupId: string) => void;
+  onOpenNote: (noteId: string) => void;
+  onDuplicate: () => void;
   onOpenTodoView: () => void;
   scrollToAsset?: ParsedNoteAsset | null;
   onAssetScrolled?: () => void;
@@ -56,6 +59,7 @@ export const NoteEditor = memo(function NoteEditor({
   note,
   folders,
   tags,
+  allNotes,
   saveStatus,
   onUpdateTitle,
   onUpdateContent,
@@ -69,6 +73,8 @@ export const NoteEditor = memo(function NoteEditor({
   onScheduledAtChange,
   onCreateLinkedKanbanCard,
   onOpenKanbanCard,
+  onOpenNote,
+  onDuplicate,
   onOpenTodoView,
   scrollToAsset,
   onAssetScrolled,
@@ -205,6 +211,14 @@ export const NoteEditor = memo(function NoteEditor({
           </div>
           <button
             type="button"
+            className="note-panel-toggle"
+            onClick={onDuplicate}
+            title={t('noteEditor.duplicate')}
+          >
+            <Copy size={20} />
+          </button>
+          <button
+            type="button"
             className={`fav-btn pin-header-btn ${note.pinned ? 'active' : ''}`}
             onClick={onTogglePin}
             title={note.pinned ? t('noteEditor.unpin') : t('noteEditor.pin')}
@@ -242,6 +256,9 @@ export const NoteEditor = memo(function NoteEditor({
           noteTagIds={note.tagIds}
           onToggleTag={onToggleTag}
           onEditorReady={handleEditorReady}
+          notes={allNotes}
+          currentNoteId={note.id}
+          onOpenNote={onOpenNote}
         />
     </main>
     {assetsOpen && (

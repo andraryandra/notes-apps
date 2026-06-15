@@ -51,7 +51,7 @@ export class SqliteStore implements IDataStore {
         .prepare(
           `SELECT id, title, substr(content, 1, 400) AS contentSnippet, folder_id AS folderId,
                   tag_ids AS tagIdsRaw, favorite, pinned, scheduled_at AS scheduledAt,
-                  created_at AS createdAt, updated_at AS updatedAt
+                  deleted_at AS deletedAt, created_at AS createdAt, updated_at AS updatedAt
            FROM notes`
         )
         .all() as {
@@ -63,6 +63,7 @@ export class SqliteStore implements IDataStore {
         favorite: number;
         pinned: number;
         scheduledAt: number | null;
+        deletedAt: number | null;
         createdAt: number;
         updatedAt: number;
       }[]
@@ -79,6 +80,7 @@ export class SqliteStore implements IDataStore {
           favorite: Boolean(r.favorite),
           pinned: Boolean(r.pinned),
           scheduledAt: r.scheduledAt ?? null,
+          deletedAt: r.deletedAt ?? null,
           createdAt: r.createdAt,
           updatedAt: r.updatedAt,
         }) satisfies Note
@@ -132,7 +134,7 @@ export class SqliteStore implements IDataStore {
       .prepare(
         `SELECT id, group_id AS groupId, column_id AS columnId, title, content,
                 sort_order AS \`order\`, due_at AS dueAt, scheduled_at AS scheduledAt,
-                tag_ids AS tagIdsRaw, linked_note_id AS linkedNoteId,
+                tag_ids AS tagIdsRaw, linked_note_id AS linkedNoteId, deleted_at AS deletedAt,
                 created_at AS createdAt, updated_at AS updatedAt
          FROM kanban_cards`
       )
@@ -145,6 +147,7 @@ export class SqliteStore implements IDataStore {
           scheduledAt: r.scheduledAt ?? null,
           tagIds: parseJson<string[]>(r.tagIdsRaw ?? null, []),
           linkedNoteId: r.linkedNoteId ?? null,
+          deletedAt: (r as KanbanCard & { deletedAt?: number | null }).deletedAt ?? null,
         };
       });
 
@@ -222,12 +225,12 @@ export class SqliteStore implements IDataStore {
       for (const f of normalized.folders) insFolder.run(f);
 
       const insNoteFull = this.db.prepare(
-        `INSERT OR REPLACE INTO notes (id, title, content, folder_id, tag_ids, favorite, pinned, scheduled_at, created_at, updated_at)
-         VALUES (@id, @title, @content, @folderId, @tagIds, @favorite, @pinned, @scheduledAt, @createdAt, @updatedAt)`
+        `INSERT OR REPLACE INTO notes (id, title, content, folder_id, tag_ids, favorite, pinned, scheduled_at, deleted_at, created_at, updated_at)
+         VALUES (@id, @title, @content, @folderId, @tagIds, @favorite, @pinned, @scheduledAt, @deletedAt, @createdAt, @updatedAt)`
       );
       const updNoteMeta = this.db.prepare(
         `UPDATE notes SET title = @title, folder_id = @folderId, tag_ids = @tagIds,
-         favorite = @favorite, pinned = @pinned, scheduled_at = @scheduledAt, updated_at = @updatedAt
+         favorite = @favorite, pinned = @pinned, scheduled_at = @scheduledAt, deleted_at = @deletedAt, updated_at = @updatedAt
          WHERE id = @id`
       );
       for (const n of normalized.notes) {
@@ -270,8 +273,8 @@ export class SqliteStore implements IDataStore {
       for (const c of normalized.kanbanColumns) insCol.run(c);
 
       const insCard = this.db.prepare(
-        `INSERT OR REPLACE INTO kanban_cards (id, group_id, column_id, title, content, sort_order, due_at, scheduled_at, tag_ids, linked_note_id, created_at, updated_at)
-         VALUES (@id, @groupId, @columnId, @title, @content, @order, @dueAt, @scheduledAt, @tagIds, @linkedNoteId, @createdAt, @updatedAt)`
+        `INSERT OR REPLACE INTO kanban_cards (id, group_id, column_id, title, content, sort_order, due_at, scheduled_at, tag_ids, linked_note_id, deleted_at, created_at, updated_at)
+         VALUES (@id, @groupId, @columnId, @title, @content, @order, @dueAt, @scheduledAt, @tagIds, @linkedNoteId, @deletedAt, @createdAt, @updatedAt)`
       );
       for (const c of normalized.kanbanCards) {
         insCard.run({

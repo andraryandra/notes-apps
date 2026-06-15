@@ -41,6 +41,14 @@ export function loadSettings(settingsPath: string): AppSettings {
       sidebarMode: isSidebarMode(raw.sidebarMode)
         ? raw.sidebarMode
         : DEFAULT_APP_SETTINGS.sidebarMode,
+      scheduleRemindersEnabled:
+        typeof raw.scheduleRemindersEnabled === 'boolean'
+          ? raw.scheduleRemindersEnabled
+          : DEFAULT_APP_SETTINGS.scheduleRemindersEnabled,
+      reminderFired:
+        raw.reminderFired && typeof raw.reminderFired === 'object'
+          ? { ...raw.reminderFired }
+          : { ...DEFAULT_APP_SETTINGS.reminderFired },
     };
   } catch {
     /* ignore */

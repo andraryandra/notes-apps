@@ -7,7 +7,7 @@ import {
   useEffect,
   type MouseEvent,
 } from 'react';
-import { Plus, Star, Trash2, CheckSquare, Square, X, Pin, FolderInput } from 'lucide-react';
+import { Plus, Star, Trash2, CheckSquare, Square, X, Pin, FolderInput, ChevronDown } from 'lucide-react';
 import { stripHtml, getFolderPath } from '../hooks/useNotesStore';
 import { useListScrollClass } from '../hooks/useListScrollClass';
 import { useStaggerList } from '../hooks/useStaggerList';
@@ -30,6 +30,8 @@ interface Props {
   selectedNoteId: string | null;
   onSelect: (id: string) => void;
   onCreate: () => void;
+  onCreateFromTemplate: () => void;
+  onDuplicate: (id: string) => void;
   onDelete: (id: string) => void;
   onDeleteMany: (ids: string[]) => void;
   onMoveMany: (ids: string[], folderId: string | null) => void;
@@ -166,6 +168,8 @@ const NoteListInner = memo(function NoteListInner({
   selectedNoteId,
   onSelect,
   onCreate,
+  onCreateFromTemplate,
+  onDuplicate,
   onDelete,
   onDeleteMany,
   onMoveMany,
@@ -182,6 +186,8 @@ const NoteListInner = memo(function NoteListInner({
   const [selectMode, setSelectMode] = useState(false);
   const [checkedIds, setCheckedIds] = useState<Set<string>>(() => new Set());
   const [moveDialogOpen, setMoveDialogOpen] = useState(false);
+  const [createMenuOpen, setCreateMenuOpen] = useState(false);
+  const createMenuRef = useRef<HTMLDivElement>(null);
   const [moveNoteIds, setMoveNoteIds] = useState<string[]>([]);
 
   useListScrollClass(scrollRef, '.app-body', 'is-list-scrolling');
@@ -212,6 +218,17 @@ const NoteListInner = memo(function NoteListInner({
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [selectMode]);
+
+  useEffect(() => {
+    if (!createMenuOpen) return;
+    const close = (e: globalThis.MouseEvent) => {
+      if (createMenuRef.current && !createMenuRef.current.contains(e.target as Node)) {
+        setCreateMenuOpen(false);
+      }
+    };
+    window.addEventListener('mousedown', close);
+    return () => window.removeEventListener('mousedown', close);
+  }, [createMenuOpen]);
 
   const linkedCountByNote = useMemo(() => {
     const m = new Map<string, number>();
@@ -375,9 +392,39 @@ const NoteListInner = memo(function NoteListInner({
                   <CheckSquare size={16} />
                 </button>
               )}
-              <button type="button" className="note-create-btn" onClick={onCreate} title={t('noteList.newNote')}>
-                <Plus size={18} />
-              </button>
+              <div className="note-create-wrap" ref={createMenuRef}>
+                <button
+                  type="button"
+                  className="note-create-btn"
+                  onClick={() => setCreateMenuOpen((o) => !o)}
+                  title={t('noteList.newNote')}
+                >
+                  <Plus size={18} />
+                  <ChevronDown size={14} />
+                </button>
+                {createMenuOpen && (
+                  <div className="note-create-menu">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onCreate();
+                        setCreateMenuOpen(false);
+                      }}
+                    >
+                      {t('noteList.newNote')}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onCreateFromTemplate();
+                        setCreateMenuOpen(false);
+                      }}
+                    >
+                      {t('noteList.fromTemplate')}
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </>
         )}
@@ -424,6 +471,7 @@ const NoteListInner = memo(function NoteListInner({
         onToggleFavorite={onToggleFavorite}
         onTogglePin={onTogglePin}
         onDelete={onDelete}
+        onDuplicate={onDuplicate}
         onMoveToFolder={(noteId) => openMoveDialog([noteId])}
       />
       <MoveToFolderDialog

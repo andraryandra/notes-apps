@@ -12,6 +12,7 @@ import type {
   AttachmentMeta,
   NoteExportFormat,
   NoteExportResult,
+  ScheduleReminderPayload,
 } from '../src/types';
 
 contextBridge.exposeInMainWorld('electronAPI', {
@@ -97,4 +98,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
     plainText: string;
     format: NoteExportFormat;
   }): Promise<NoteExportResult> => ipcRenderer.invoke('note:export', payload),
+  showScheduleReminder: (payload: ScheduleReminderPayload): Promise<boolean> =>
+    ipcRenderer.invoke('notification:schedule', payload),
+  onScheduleReminderOpen: (callback: (payload: ScheduleReminderPayload) => void) => {
+    const handler = (_: Electron.IpcRendererEvent, payload: ScheduleReminderPayload) =>
+      callback(payload);
+    ipcRenderer.on('schedule:open', handler);
+    return () => {
+      ipcRenderer.removeListener('schedule:open', handler);
+    };
+  },
 });

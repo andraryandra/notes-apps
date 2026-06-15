@@ -59,6 +59,10 @@ export interface AppSettings {
   uiZoomLevel: number;
   /** Tampilan sidebar: penuh atau icon rail */
   sidebarMode: SidebarMode;
+  /** Notifikasi jadwal saat app terbuka */
+  scheduleRemindersEnabled: boolean;
+  /** Kunci reminder yang sudah ditampilkan */
+  reminderFired: Record<string, number>;
 }
 
 export const MIN_UI_ZOOM_LEVEL = -5;
@@ -73,6 +77,8 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   timeZone: detectSystemTimeZone(),
   uiZoomLevel: DEFAULT_UI_ZOOM_LEVEL,
   sidebarMode: 'expanded',
+  scheduleRemindersEnabled: true,
+  reminderFired: {},
 };
 
 export function isAppTheme(value: unknown): value is AppTheme {

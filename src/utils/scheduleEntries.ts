@@ -17,6 +17,7 @@ export function buildScheduleEntries(
 ): ScheduleEntry[] {
   const entries: ScheduleEntry[] = [];
   for (const n of notes) {
+    if (n.deletedAt != null) continue;
     if (n.scheduledAt) {
       entries.push({
         kind: 'note',
@@ -29,6 +30,7 @@ export function buildScheduleEntries(
     }
   }
   for (const c of kanbanCards) {
+    if (c.deletedAt != null) continue;
     if (c.scheduledAt) {
       entries.push({
         kind: 'kanban',

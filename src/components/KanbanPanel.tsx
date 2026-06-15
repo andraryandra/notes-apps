@@ -20,7 +20,7 @@ interface Props {
   onUpdateColumnColor: (id: string, color: string) => void;
   onDeleteColumn: (id: string) => void;
   onCreateCard: (columnId: string, title: string) => void;
-  onMoveCard: (cardId: string, columnId: string) => void;
+  onMoveCard: (cardId: string, columnId: string, insertBeforeCardId?: string | null) => void;
   onMoveColumn: (columnId: string, targetColumnId: string) => void;
   onDeleteCard: (id: string) => void;
   onRenameGroup: (name: string) => void;
@@ -138,7 +138,12 @@ export function KanbanPanel({
     }
   };
 
-  const handleColumnDrop = (e: React.DragEvent, columnId: string, columnEl: HTMLElement) => {
+  const handleColumnDrop = (
+    e: React.DragEvent,
+    columnId: string,
+    columnEl: HTMLElement,
+    insertBeforeCardId?: string | null
+  ) => {
     e.preventDefault();
     e.stopPropagation();
     clearColumnHighlight(columnEl);
@@ -151,7 +156,7 @@ export function KanbanPanel({
     }
 
     const cardId = e.dataTransfer.getData('text/plain') || dragCardId;
-    if (cardId) onMoveCard(cardId, columnId);
+    if (cardId) onMoveCard(cardId, columnId, insertBeforeCardId);
     setDragCardId(null);
   };
 
@@ -316,7 +321,7 @@ export function KanbanPanel({
                       e.dataTransfer.dropEffect = 'move';
                     }}
                     onDrop={(e) =>
-                      handleColumnDrop(e, col.id, e.currentTarget.closest('.kanban-column')!)
+                      handleColumnDrop(e, col.id, e.currentTarget.closest('.kanban-column')!, card.id)
                     }
                   >
                     <span className="kanban-card-grip" aria-hidden="true">

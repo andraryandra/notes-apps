@@ -43,6 +43,7 @@ Helper pohon: `buildFolderTree(folders, parentId)` di `useNotesStore.ts`.
 | favorite | boolean | Filter view + styling |
 | pinned | boolean | Urutan di atas daftar |
 | scheduledAt | number \| null | Jadwal (unix ms) |
+| deletedAt | number \| null | Soft delete; `null` = aktif |
 | createdAt | number | Unix ms |
 | updatedAt | number | Di-update setiap `updateNote` |
 
@@ -60,7 +61,7 @@ Helper pohon: `buildFolderTree(folders, parentId)` di `useNotesStore.ts`.
 |---------|---------------|
 | `KanbanGroup` | id, name, createdAt, updatedAt |
 | `KanbanColumn` | id, groupId, name, order |
-| `KanbanCard` | id, groupId, columnId, title, content (HTML), order, dueAt, scheduledAt, linkedNoteId |
+| `KanbanCard` | id, groupId, columnId, title, content (HTML), order, dueAt, scheduledAt, linkedNoteId, deletedAt |
 
 ## Penyimpanan di disk
 
@@ -73,7 +74,7 @@ Helper pohon: `buildFolderTree(folders, parentId)` di `useNotesStore.ts`.
 | File / folder | Isi |
 |---------------|-----|
 | `notes.db` | SQLite — catatan, folder, tag, kanban, metadata file |
-| `settings.json` | Tema, layout, scroll batch size |
+| `settings.json` | Tema, layout, scroll batch size, pengingat jadwal (`scheduleRemindersEnabled`, `reminderFired`) |
 | `images/` | File gambar binary |
 | `attachments/` | Lampiran (PDF, Office, dll.) |
 | `notes-data.json.migrated` | JSON lama (setelah migrasi otomatis ke SQLite) |

@@ -2,11 +2,12 @@ import type { AppData, KanbanCard, KanbanColumn, KanbanGroup, Note, TodoItem, To
 import { pickKanbanColumnColor } from '../src/utils/kanbanColumnColors';
 import { migrateTodosToKanban } from '../src/utils/kanbanMigrate';
 
-function normalizeNote(raw: Note & { scheduledAt?: number | null; pinned?: boolean }): Note {
+function normalizeNote(raw: Note & { scheduledAt?: number | null; pinned?: boolean; deletedAt?: number | null }): Note {
   return {
     ...raw,
     scheduledAt: raw.scheduledAt ?? null,
     pinned: raw.pinned ?? false,
+    deletedAt: raw.deletedAt ?? null,
   };
 }
 
@@ -28,7 +29,7 @@ function normalizeTodo(raw: TodoItem & { status?: TodoStatus }): TodoItem {
   };
 }
 
-function normalizeKanbanCard(raw: KanbanCard & { tagIds?: string[] }): KanbanCard {
+function normalizeKanbanCard(raw: KanbanCard & { tagIds?: string[]; deletedAt?: number | null }): KanbanCard {
   const scheduledAt = raw.scheduledAt ?? raw.dueAt ?? null;
   return {
     ...raw,
@@ -38,6 +39,7 @@ function normalizeKanbanCard(raw: KanbanCard & { tagIds?: string[] }): KanbanCar
     tagIds: raw.tagIds ?? [],
     linkedNoteId: raw.linkedNoteId ?? null,
     order: raw.order ?? 0,
+    deletedAt: raw.deletedAt ?? null,
   };
 }
 

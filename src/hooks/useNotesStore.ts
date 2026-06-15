@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { pickKanbanColumnColor } from '../utils/kanbanColumnColors';
 import { DEFAULT_KANBAN_GROUP_NAME } from '../utils/kanbanDisplayNames';
+import { computeKanbanCardOrders, type KanbanOrderUpdate } from '../utils/kanbanMigrate';
+import { getNoteTemplate } from '../config/storage';
 import type { AppData, Folder, KanbanCard, KanbanColumn, KanbanGroup, Note, Tag, TodoItem, TodoStatus } from '../types';
 
 export const KANBAN_COLUMN_DRAG_MIME = 'application/x-notes-kanban-column';
@@ -229,10 +231,13 @@ export function useNotesStore() {
         const noteIdsToDelete = new Set(
           prev.notes.filter((n) => n.folderId && ids.has(n.folderId)).map((n) => n.id)
         );
+        const now = Date.now();
         return {
           ...prev,
           folders: prev.folders.filter((f) => !ids.has(f.id)),
-          notes: prev.notes.filter((n) => !noteIdsToDelete.has(n.id)),
+          notes: prev.notes.map((n) =>
+            noteIdsToDelete.has(n.id) ? { ...n, deletedAt: now, updatedAt: now } : n
+          ),
           todos: prev.todos.map((t) =>
             t.noteId && noteIdsToDelete.has(t.noteId) ? { ...t, noteId: null } : t
           ),
@@ -269,6 +274,7 @@ export function useNotesStore() {
         favorite: false,
         pinned: false,
         scheduledAt: options?.scheduledAt ?? null,
+        deletedAt: null,
         createdAt: Date.now(),
         updatedAt: Date.now(),
       };
@@ -305,10 +311,12 @@ export function useNotesStore() {
 
   const deleteNote = useCallback(
     (id: string) => {
+      const now = Date.now();
       persist((prev) => ({
         ...prev,
-        notes: prev.notes.filter((n) => n.id !== id),
-        todos: prev.todos.map((t) => (t.noteId === id ? { ...t, noteId: null } : t)),
+        notes: prev.notes.map((n) =>
+          n.id === id ? { ...n, deletedAt: now, updatedAt: now } : n
+        ),
       }));
     },
     [persist]
@@ -318,16 +326,101 @@ export function useNotesStore() {
     (ids: string[]) => {
       if (ids.length === 0) return;
       const idSet = new Set(ids);
+      const now = Date.now();
       persist((prev) => ({
         ...prev,
-        notes: prev.notes.filter((n) => !idSet.has(n.id)),
-        todos: prev.todos.map((t) =>
-          t.noteId && idSet.has(t.noteId) ? { ...t, noteId: null } : t
+        notes: prev.notes.map((n) =>
+          idSet.has(n.id) ? { ...n, deletedAt: now, updatedAt: now } : n
         ),
       }));
     },
     [persist]
   );
+
+  const restoreNote = useCallback(
+    (id: string) => {
+      persist((prev) => ({
+        ...prev,
+        notes: prev.notes.map((n) =>
+          n.id === id ? { ...n, deletedAt: null, updatedAt: Date.now() } : n
+        ),
+      }));
+    },
+    [persist]
+  );
+
+  const purgeNote = useCallback(
+    (id: string) => {
+      persist((prev) => ({
+        ...prev,
+        notes: prev.notes.filter((n) => n.id !== id),
+        todos: prev.todos.map((t) => (t.noteId === id ? { ...t, noteId: null } : t)),
+      }));
+    },
+    [persist]
+  );
+
+  const duplicateNote = useCallback(
+    (id: string) => {
+      const source = dataRef.current.notes.find((n) => n.id === id);
+      if (!source) return null;
+      const baseTitle = source.title.trim() || 'Catatan tanpa judul';
+      const note: Note = {
+        id: uuidv4(),
+        title: `${baseTitle} (salinan)`,
+        content: source.content,
+        contentPreview: source.contentPreview ?? '',
+        contentLoaded: source.contentLoaded ?? true,
+        folderId: source.folderId,
+        tagIds: [...source.tagIds],
+        favorite: false,
+        pinned: false,
+        scheduledAt: source.scheduledAt,
+        deletedAt: null,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      };
+      persist((prev) => ({ ...prev, notes: [note, ...prev.notes] }));
+      return note;
+    },
+    [persist]
+  );
+
+  const createNoteFromTemplate = useCallback(
+    (templateId: string, folderId: string | null = null) => {
+      const tpl = getNoteTemplate(templateId);
+      const note: Note = {
+        id: uuidv4(),
+        title: tpl.title,
+        content: tpl.content,
+        contentPreview: tpl.content
+          .replace(/<[^>]+>/g, ' ')
+          .replace(/\s+/g, ' ')
+          .trim()
+          .slice(0, 160),
+        contentLoaded: true,
+        folderId,
+        tagIds: [],
+        favorite: false,
+        pinned: false,
+        scheduledAt: null,
+        deletedAt: null,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      };
+      persist((prev) => ({ ...prev, notes: [note, ...prev.notes] }));
+      return note;
+    },
+    [persist]
+  );
+
+  const emptyTrash = useCallback(() => {
+    persist((prev) => ({
+      ...prev,
+      notes: prev.notes.filter((n) => n.deletedAt == null),
+      kanbanCards: prev.kanbanCards.filter((c) => c.deletedAt == null),
+    }));
+  }, [persist]);
 
   const createTodo = useCallback(
     (
@@ -618,7 +711,7 @@ export function useNotesStore() {
       options?: { content?: string; linkedNoteId?: string | null; tagIds?: string[] }
     ) => {
       const inCol = dataRef.current.kanbanCards.filter(
-        (c) => c.groupId === groupId && c.columnId === columnId
+        (c) => c.groupId === groupId && c.columnId === columnId && c.deletedAt == null
       );
       const order = inCol.length ? Math.max(...inCol.map((c) => c.order)) + 1 : 0;
       const now = Date.now();
@@ -633,6 +726,7 @@ export function useNotesStore() {
         scheduledAt: null,
         tagIds: options?.tagIds ?? [],
         linkedNoteId: options?.linkedNoteId ?? null,
+        deletedAt: null,
         createdAt: now,
         updatedAt: now,
       };
@@ -663,19 +757,60 @@ export function useNotesStore() {
   );
 
   const moveKanbanCard = useCallback(
-    (id: string, columnId: string) => {
-      const card = dataRef.current.kanbanCards.find((c) => c.id === id);
-      if (!card || card.columnId === columnId) return;
-      const inCol = dataRef.current.kanbanCards.filter(
-        (c) => c.columnId === columnId && c.id !== id
+    (id: string, columnId: string, insertBeforeCardId?: string | null) => {
+      const updates = computeKanbanCardOrders(
+        dataRef.current.kanbanCards,
+        id,
+        columnId,
+        insertBeforeCardId
       );
-      const order = inCol.length ? Math.max(...inCol.map((c) => c.order)) + 1 : 0;
-      updateKanbanCard(id, { columnId, order });
+      if (!updates?.length) return;
+      const orderMap = new Map<string, number>(
+        updates.map((u: KanbanOrderUpdate) => [u.id, u.order])
+      );
+      persist((prev) => ({
+        ...prev,
+        kanbanCards: prev.kanbanCards.map((c) => {
+          const nextOrder = orderMap.get(c.id);
+          if (nextOrder === undefined) return c;
+          return {
+            ...c,
+            columnId: c.id === id ? columnId : c.columnId,
+            order: nextOrder,
+            updatedAt: Date.now(),
+          };
+        }),
+      }));
     },
-    [updateKanbanCard]
+    [persist]
   );
 
   const deleteKanbanCard = useCallback(
+    (id: string) => {
+      const now = Date.now();
+      persist((prev) => ({
+        ...prev,
+        kanbanCards: prev.kanbanCards.map((c) =>
+          c.id === id ? { ...c, deletedAt: now, updatedAt: now } : c
+        ),
+      }));
+    },
+    [persist]
+  );
+
+  const restoreKanbanCard = useCallback(
+    (id: string) => {
+      persist((prev) => ({
+        ...prev,
+        kanbanCards: prev.kanbanCards.map((c) =>
+          c.id === id ? { ...c, deletedAt: null, updatedAt: Date.now() } : c
+        ),
+      }));
+    },
+    [persist]
+  );
+
+  const purgeKanbanCard = useCallback(
     (id: string) => {
       persist((prev) => ({
         ...prev,
@@ -740,6 +875,11 @@ export function useNotesStore() {
     updateNote,
     deleteNote,
     deleteNotes,
+    restoreNote,
+    purgeNote,
+    duplicateNote,
+    createNoteFromTemplate,
+    emptyTrash,
     moveNotesToFolder,
     toggleFavorite,
     togglePin,
@@ -763,6 +903,8 @@ export function useNotesStore() {
     updateKanbanCard,
     moveKanbanCard,
     deleteKanbanCard,
+    restoreKanbanCard,
+    purgeKanbanCard,
     createKanbanCardFromNote,
     toggleKanbanCardTag,
   };

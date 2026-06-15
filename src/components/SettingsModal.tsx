@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
-import { X, Download, Upload, HardDrive, FolderOpen, Trash2, Image, Paperclip, Database, Keyboard, Languages, Globe, ZoomIn, ZoomOut, RotateCcw, RefreshCw } from 'lucide-react';
+import { X, Download, Upload, HardDrive, FolderOpen, Trash2, Image, Paperclip, Database, Keyboard, Languages, Globe, ZoomIn, ZoomOut, RotateCcw, RefreshCw, Bell } from 'lucide-react';
 import { useToast } from '../hooks/useToast';
 import { useConfirm } from '../hooks/useConfirm';
 import { useI18n } from '../i18n/useI18n';
@@ -40,9 +40,11 @@ interface Props {
   timeZone: string;
   uiZoomLevel: number;
   sidebarMode: SidebarMode;
+  scheduleRemindersEnabled: boolean;
   onThemeChange: (t: AppTheme) => void;
   onLayoutChange: (l: AppLayoutMode) => void;
   onSidebarModeChange: (mode: SidebarMode) => void;
+  onScheduleRemindersEnabledChange: (enabled: boolean) => void;
   onScrollBatchSizeChange: (size: ScrollBatchSize) => void;
   onLocaleChange: (locale: AppLocale) => void;
   onTimeZoneChange: (timeZone: string) => void;
@@ -72,9 +74,11 @@ export function SettingsModal({
   timeZone,
   uiZoomLevel,
   sidebarMode,
+  scheduleRemindersEnabled,
   onThemeChange,
   onLayoutChange,
   onSidebarModeChange,
+  onScheduleRemindersEnabledChange,
   onScrollBatchSizeChange,
   onLocaleChange,
   onTimeZoneChange,
@@ -357,6 +361,30 @@ export function SettingsModal({
               </button>
             ))}
           </div>
+        </section>
+
+        <section className="settings-section">
+          <h3>
+            <Bell size={16} />
+            {t('settings.scheduleReminders')}
+          </h3>
+          <p className="settings-info-text">{t('settings.scheduleRemindersDesc')}</p>
+          <label className="settings-toggle-row">
+            <input
+              type="checkbox"
+              checked={scheduleRemindersEnabled}
+              disabled={busy}
+              onChange={(e) => {
+                onScheduleRemindersEnabledChange(e.target.checked);
+                showSuccess(
+                  e.target.checked
+                    ? t('settings.scheduleRemindersOn')
+                    : t('settings.scheduleRemindersOff')
+                );
+              }}
+            />
+            <span>{t('settings.scheduleRemindersLabel')}</span>
+          </label>
         </section>
 
         <section className="settings-section">

@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Star, Trash2, Pin, FolderInput } from 'lucide-react';
+import { Star, Trash2, Pin, FolderInput, Copy } from 'lucide-react';
 import { useI18n } from '../i18n/useI18n';
 import './NoteContextMenu.css';
 
@@ -18,11 +18,12 @@ interface Props {
   onToggleFavorite: (noteId: string) => void;
   onTogglePin: (noteId: string) => void;
   onDelete: (noteId: string) => void;
+  onDuplicate?: (noteId: string) => void;
   onMoveToFolder?: (noteId: string) => void;
 }
 
 const MENU_W = 200;
-const MENU_H = 168;
+const MENU_H = 208;
 
 function clampPosition(x: number, y: number) {
   const pad = 8;
@@ -38,6 +39,7 @@ export function NoteContextMenu({
   onToggleFavorite,
   onTogglePin,
   onDelete,
+  onDuplicate,
   onMoveToFolder,
 }: Props) {
   const { t } = useI18n();
@@ -94,6 +96,18 @@ export function NoteContextMenu({
         >
           <FolderInput size={16} />
           {t('noteContextMenu.moveToFolder')}
+        </button>
+      )}
+      {onDuplicate && (
+        <button
+          type="button"
+          onClick={() => {
+            onDuplicate(menu.noteId);
+            onClose();
+          }}
+        >
+          <Copy size={16} />
+          {t('noteContextMenu.duplicate')}
         </button>
       )}
       <button

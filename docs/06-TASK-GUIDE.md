@@ -58,6 +58,39 @@ Gunakan tabel ini untuk **membatasi scope edit**. Baca dokumen yang disebut, lal
 | 2 | `RichEditor.tsx` — register extension + tombol toolbar |
 | 3 | `docs/02-ARCHITECTURE.md` — catat dependency |
 
+### Tempat sampah (soft delete)
+
+| Langkah | File |
+|---------|------|
+| 1 | `docs/09-DB-MIGRATIONS.md` — migrasi `deleted_at` |
+| 2 | `src/types.ts`, `normalizeData.ts`, `sqliteStore.ts` |
+| 3 | `src/hooks/useNotesStore.ts` — soft delete, restore, purge, `emptyTrash` |
+| 4 | `src/utils/trashFilter.ts` — filter aktif/terhapus |
+| 5 | `TrashPanel.tsx`, `App.tsx`, sidebar (`trash` view) |
+
+### Duplikat / template catatan
+
+| File | Catatan |
+|------|---------|
+| `src/config/storage.ts` | Template statis catatan |
+| `useNotesStore.ts` | `duplicateNote`, `createNoteFromTemplate` |
+| `NoteList.tsx`, `NoteTemplatePicker.tsx`, `NoteContextMenu.tsx` | UI |
+
+### Tautan internal antar catatan
+
+| File | Catatan |
+|------|---------|
+| `src/utils/noteLinks.ts` | `notes-note://` |
+| `RichEditor.tsx`, `NoteLinkPicker.tsx` | Sisip & klik tautan |
+
+### Pengingat jadwal
+
+| File | Catatan |
+|------|---------|
+| `src/hooks/useScheduleReminders.ts` | Polling 60s |
+| `electron/main.ts` | `notification:schedule` |
+| `SettingsModal.tsx` | Toggle `scheduleRemindersEnabled` |
+
 ## Tugas per area
 
 | Area | Baca dulu | File utama |

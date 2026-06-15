@@ -62,6 +62,12 @@ Dokumentasi ini dirancang agar **agent AI dan developer** bisa bekerja tanpa mem
 | Virtual list (performa) | ✅ | `@tanstack/react-virtual` di NoteList |
 | Lazy load konten catatan | ✅ | Preview ringkas; muat penuh saat dibuka |
 | Migrasi skema DB | ✅ | Lihat [09-DB-MIGRATIONS.md](09-DB-MIGRATIONS.md) |
+| Tempat sampah (soft delete) | ✅ | Catatan + kartu kanban; migrasi `005_soft_delete` |
+| Reorder kartu kanban | ✅ | `moveKanbanCard` + `kanbanMigrate.ts` |
+| Duplikat & template catatan | ✅ | `duplicateNote`, `storage.ts` (template) |
+| Pengingat jadwal | ✅ | Saat app terbuka; `useScheduleReminders` + IPC Notification |
+| Tautan internal catatan | ✅ | Skema `notes-note://` di editor |
+| Unit test (Vitest) | ✅ | `npm run test` — utils kanban/trash/reminder/links |
 | Cloud sync | ❌ | — |
 | Enkripsi catatan | ❌ | — |
 

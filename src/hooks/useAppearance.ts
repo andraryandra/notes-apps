@@ -112,6 +112,22 @@ export function useAppearance() {
     });
   }, []);
 
+  const setScheduleRemindersEnabled = useCallback(async (scheduleRemindersEnabled: boolean) => {
+    setSettings((prev) => {
+      const next = { ...prev, scheduleRemindersEnabled };
+      void window.electronAPI?.saveSettings(next);
+      return next;
+    });
+  }, []);
+
+  const patchSettings = useCallback(async (patch: Partial<AppSettings>) => {
+    setSettings((prev) => {
+      const next = { ...prev, ...patch };
+      void window.electronAPI?.saveSettings(next);
+      return next;
+    });
+  }, []);
+
   return {
     theme: settings.theme,
     layout: settings.layout,
@@ -120,6 +136,8 @@ export function useAppearance() {
     timeZone: settings.timeZone,
     uiZoomLevel: settings.uiZoomLevel,
     sidebarMode: settings.sidebarMode,
+    scheduleRemindersEnabled: settings.scheduleRemindersEnabled,
+    reminderFired: settings.reminderFired,
     setTheme,
     setLayout,
     setScrollBatchSize,
@@ -128,6 +146,8 @@ export function useAppearance() {
     setUiZoomLevel,
     adjustUiZoomLevel,
     setSidebarMode,
+    setScheduleRemindersEnabled,
+    patchSettings,
     setSettings: persist,
     ready,
   };
