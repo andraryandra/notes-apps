@@ -124,7 +124,7 @@ export class SqliteStore implements IDataStore {
 
     const kanbanColumns = this.db
       .prepare(
-        'SELECT id, group_id AS groupId, name, sort_order AS `order` FROM kanban_columns'
+        'SELECT id, group_id AS groupId, name, sort_order AS `order`, color FROM kanban_columns'
       )
       .all() as KanbanColumn[];
 
@@ -132,16 +132,18 @@ export class SqliteStore implements IDataStore {
       .prepare(
         `SELECT id, group_id AS groupId, column_id AS columnId, title, content,
                 sort_order AS \`order\`, due_at AS dueAt, scheduled_at AS scheduledAt,
-                linked_note_id AS linkedNoteId, created_at AS createdAt, updated_at AS updatedAt
+                tag_ids AS tagIdsRaw, linked_note_id AS linkedNoteId,
+                created_at AS createdAt, updated_at AS updatedAt
          FROM kanban_cards`
       )
       .all()
       .map((row) => {
-        const r = row as KanbanCard;
+        const r = row as KanbanCard & { tagIdsRaw?: string };
         return {
           ...r,
           dueAt: r.dueAt ?? null,
           scheduledAt: r.scheduledAt ?? null,
+          tagIds: parseJson<string[]>(r.tagIdsRaw ?? null, []),
           linkedNoteId: r.linkedNoteId ?? null,
         };
       });
@@ -262,16 +264,22 @@ export class SqliteStore implements IDataStore {
       for (const g of normalized.kanbanGroups) insGroup.run(g);
 
       const insCol = this.db.prepare(
-        `INSERT OR REPLACE INTO kanban_columns (id, group_id, name, sort_order)
-         VALUES (@id, @groupId, @name, @order)`
+        `INSERT OR REPLACE INTO kanban_columns (id, group_id, name, sort_order, color)
+         VALUES (@id, @groupId, @name, @order, @color)`
       );
       for (const c of normalized.kanbanColumns) insCol.run(c);
 
       const insCard = this.db.prepare(
-        `INSERT OR REPLACE INTO kanban_cards (id, group_id, column_id, title, content, sort_order, due_at, scheduled_at, linked_note_id, created_at, updated_at)
-         VALUES (@id, @groupId, @columnId, @title, @content, @order, @dueAt, @scheduledAt, @linkedNoteId, @createdAt, @updatedAt)`
+        `INSERT OR REPLACE INTO kanban_cards (id, group_id, column_id, title, content, sort_order, due_at, scheduled_at, tag_ids, linked_note_id, created_at, updated_at)
+         VALUES (@id, @groupId, @columnId, @title, @content, @order, @dueAt, @scheduledAt, @tagIds, @linkedNoteId, @createdAt, @updatedAt)`
       );
-      for (const c of normalized.kanbanCards) insCard.run(c);
+      for (const c of normalized.kanbanCards) {
+        insCard.run({
+          ...c,
+          tagIds: JSON.stringify(c.tagIds ?? []),
+          dueAt: null,
+        });
+      }
     });
     tx();
   }

@@ -9,7 +9,6 @@ import { KanbanCardEditor } from './components/KanbanCardEditor';
 import { SchedulePanel } from './components/SchedulePanel';
 import { ScheduleListPanel } from './components/ScheduleListPanel';
 import { DashboardPanel } from './components/DashboardPanel';
-import { CheckSquare } from 'lucide-react';
 import { useNotesStore, stripHtml } from './hooks/useNotesStore';
 import { collectFolderDescendantIds, countNotesInFolderSet } from './utils/folderOptions';
 import { noteMatchesQuery } from './utils/noteSearch';
@@ -272,7 +271,7 @@ function AppContent({
   const todosActiveCount = data.kanbanCards.length;
   const scheduleCount =
     data.notes.filter((n) => n.scheduledAt).length +
-    data.kanbanCards.filter((c) => c.dueAt || c.scheduledAt).length;
+    data.kanbanCards.filter((c) => c.scheduledAt).length;
 
   useEffect(() => {
     if (!isFocusLayout || !selectedNote) setNoteListDrawerOpen(false);
@@ -592,7 +591,9 @@ function AppContent({
           />
         )}
         {sidebarView === 'todos' && (
-          <div className="kanban-workspace">
+          <div
+            className={`kanban-workspace ${selectedKanbanCard ? '' : 'kanban-workspace--board-only'}`.trim()}
+          >
             {selectedKanbanGroup ? (
               <KanbanPanel
                 group={selectedKanbanGroup}
@@ -604,6 +605,7 @@ function AppContent({
                   if (selectedKanbanGroupId) store.createKanbanColumn(selectedKanbanGroupId, name);
                 }}
                 onRenameColumn={store.renameKanbanColumn}
+                onUpdateColumnColor={store.updateKanbanColumnColor}
                 onDeleteColumn={store.deleteKanbanColumn}
                 onCreateCard={(columnId, title) => {
                   if (!selectedKanbanGroupId) return;
@@ -624,33 +626,28 @@ function AppContent({
                 <p>{t('app.kanbanEmpty')}</p>
               </div>
             )}
-            {selectedKanbanCard && selectedKanbanGroup && selectedCardColumn ? (
+            {selectedKanbanCard && selectedKanbanGroup && selectedCardColumn && (
               <KanbanCardEditor
                 card={selectedKanbanCard}
                 groupName={getKanbanGroupDisplayName(selectedKanbanGroup.name, t)}
                 columnName={getKanbanColumnDisplayName(selectedCardColumn.name, t)}
+                tags={data.tags}
                 saveStatus={store.saveStatus}
                 onUpdateTitle={(title) => store.updateKanbanCard(selectedKanbanCard.id, { title })}
                 onUpdateContent={(content) =>
                   store.updateKanbanCard(selectedKanbanCard.id, { content })
                 }
-                onDueAtChange={(dueAt) =>
-                  store.updateKanbanCard(selectedKanbanCard.id, { dueAt })
-                }
                 onScheduledAtChange={(scheduledAt) =>
                   store.updateKanbanCard(selectedKanbanCard.id, { scheduledAt })
                 }
+                onToggleTag={(tagId) => store.toggleKanbanCardTag(selectedKanbanCard.id, tagId)}
+                onCreateTag={store.createTag}
                 notes={data.notes}
                 onLinkedNoteChange={(linkedNoteId) =>
                   store.updateKanbanCard(selectedKanbanCard.id, { linkedNoteId })
                 }
                 onOpenLinkedNote={openNote}
-              />
-            ) : (
-              <EmptyState
-                title={t('app.kanbanSelectCard')}
-                description={t('app.kanbanSelectCardDesc')}
-                icon={<CheckSquare size={48} strokeWidth={1.2} />}
+                onClose={() => setSelectedKanbanCardId(null)}
               />
             )}
           </div>

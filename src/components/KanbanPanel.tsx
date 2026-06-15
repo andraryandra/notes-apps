@@ -1,9 +1,10 @@
-import { useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState, type CSSProperties } from 'react';
 import { Plus, Trash2, LayoutGrid, GripVertical, Pencil, X } from 'lucide-react';
 import type { KanbanCard, KanbanColumn, KanbanGroup } from '../types';
 import { useDateTime } from '../hooks/useDateTime';
 import { getKanbanColumnDisplayName, getKanbanGroupDisplayName } from '../utils/kanbanDisplayNames';
 import { useI18n } from '../i18n/useI18n';
+import { KanbanColumnColorPicker } from './KanbanColumnColorPicker';
 import './KanbanPanel.css';
 
 interface Props {
@@ -14,6 +15,7 @@ interface Props {
   onSelectCard: (id: string | null) => void;
   onCreateColumn: (name: string) => void;
   onRenameColumn: (id: string, name: string) => void;
+  onUpdateColumnColor: (id: string, color: string) => void;
   onDeleteColumn: (id: string) => void;
   onCreateCard: (columnId: string, title: string) => void;
   onMoveCard: (cardId: string, columnId: string) => void;
@@ -29,6 +31,7 @@ export function KanbanPanel({
   onSelectCard,
   onCreateColumn,
   onRenameColumn,
+  onUpdateColumnColor,
   onDeleteColumn,
   onCreateCard,
   onMoveCard,
@@ -146,6 +149,7 @@ export function KanbanPanel({
             <div
               key={col.id}
               className="kanban-column"
+              style={{ '--col-color': col.color } as CSSProperties}
               onDragOver={(e) => {
                 e.preventDefault();
                 e.currentTarget.classList.add('kanban-column--drag-over');
@@ -164,6 +168,10 @@ export function KanbanPanel({
               }}
             >
               <div className="kanban-column-header">
+                <KanbanColumnColorPicker
+                  value={col.color}
+                  onChange={(color) => onUpdateColumnColor(col.id, color)}
+                />
                 {editingColId === col.id ? (
                   <input
                     className="kanban-column-name-input"
@@ -210,8 +218,8 @@ export function KanbanPanel({
                     <button type="button" className="kanban-card-body" onClick={() => onSelectCard(card.id)}>
                       <span className="kanban-card-title">{card.title}</span>
                       {card.content && <span className="kanban-card-preview">{t('kanban.hasNotes')}</span>}
-                      {card.dueAt && (
-                        <span className="kanban-card-date">{dt.formatScheduleDate(card.dueAt)}</span>
+                      {card.scheduledAt && (
+                        <span className="kanban-card-date">{dt.formatScheduleDate(card.scheduledAt)}</span>
                       )}
                     </button>
                     <button

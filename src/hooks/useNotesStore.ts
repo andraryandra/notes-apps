@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid';
+import { pickKanbanColumnColor } from '../utils/kanbanColumnColors';
 import { DEFAULT_KANBAN_GROUP_NAME } from '../utils/kanbanDisplayNames';
 import type { AppData, Folder, KanbanCard, KanbanColumn, KanbanGroup, Note, Tag, TodoItem, TodoStatus } from '../types';
 
@@ -436,6 +437,10 @@ export function useNotesStore() {
           ...n,
           tagIds: n.tagIds.filter((t) => t !== id),
         })),
+        kanbanCards: prev.kanbanCards.map((c) => ({
+          ...c,
+          tagIds: (c.tagIds ?? []).filter((t) => t !== id),
+        })),
       }));
     },
     [persist]
@@ -474,6 +479,7 @@ export function useNotesStore() {
         groupId: group.id,
         name: 'Kolom 1',
         order: 0,
+        color: pickKanbanColumnColor(0),
       };
       persist((prev) => ({
         ...prev,
@@ -518,6 +524,7 @@ export function useNotesStore() {
         groupId,
         name: name.trim() || `Kolom ${order + 1}`,
         order,
+        color: pickKanbanColumnColor(order),
       };
       persist((prev) => ({ ...prev, kanbanColumns: [...prev.kanbanColumns, col] }));
       return col;
@@ -531,6 +538,20 @@ export function useNotesStore() {
         ...prev,
         kanbanColumns: prev.kanbanColumns.map((c) =>
           c.id === id ? { ...c, name: name.trim() || c.name } : c
+        ),
+      }));
+    },
+    [persist]
+  );
+
+  const updateKanbanColumnColor = useCallback(
+    (id: string, color: string) => {
+      const next = color.trim();
+      if (!next) return;
+      persist((prev) => ({
+        ...prev,
+        kanbanColumns: prev.kanbanColumns.map((c) =>
+          c.id === id ? { ...c, color: next } : c
         ),
       }));
     },
@@ -562,7 +583,7 @@ export function useNotesStore() {
       groupId: string,
       columnId: string,
       title: string,
-      options?: { content?: string; linkedNoteId?: string | null; dueAt?: number | null }
+      options?: { content?: string; linkedNoteId?: string | null; tagIds?: string[] }
     ) => {
       const inCol = dataRef.current.kanbanCards.filter(
         (c) => c.groupId === groupId && c.columnId === columnId
@@ -576,8 +597,9 @@ export function useNotesStore() {
         title: title.trim() || 'Kartu baru',
         content: options?.content ?? '',
         order,
-        dueAt: options?.dueAt ?? null,
+        dueAt: null,
         scheduledAt: null,
+        tagIds: options?.tagIds ?? [],
         linkedNoteId: options?.linkedNoteId ?? null,
         createdAt: now,
         updatedAt: now,
@@ -594,7 +616,7 @@ export function useNotesStore() {
       patch: Partial<
         Pick<
           KanbanCard,
-          'title' | 'content' | 'columnId' | 'dueAt' | 'scheduledAt' | 'linkedNoteId' | 'order'
+          'title' | 'content' | 'columnId' | 'scheduledAt' | 'tagIds' | 'linkedNoteId' | 'order'
         >
       >
     ) => {
@@ -625,6 +647,18 @@ export function useNotesStore() {
     [persist]
   );
 
+  const toggleKanbanCardTag = useCallback(
+    (cardId: string, tagId: string) => {
+      const card = dataRef.current.kanbanCards.find((c) => c.id === cardId);
+      if (!card) return;
+      const tagIds = card.tagIds.includes(tagId)
+        ? card.tagIds.filter((t) => t !== tagId)
+        : [...card.tagIds, tagId];
+      updateKanbanCard(cardId, { tagIds });
+    },
+    [updateKanbanCard]
+  );
+
   const createKanbanCardFromNote = useCallback(
     (noteId: string, title: string, groupId?: string) => {
       const note = dataRef.current.notes.find((n) => n.id === noteId);
@@ -647,6 +681,7 @@ export function useNotesStore() {
       return createKanbanCard(group.id, col.id, title, {
         content: note?.content ?? '',
         linkedNoteId: noteId,
+        tagIds: note?.tagIds ?? [],
       });
     },
     [createKanbanGroup, createKanbanColumn, createKanbanCard]
@@ -683,12 +718,14 @@ export function useNotesStore() {
     deleteKanbanGroup,
     createKanbanColumn,
     renameKanbanColumn,
+    updateKanbanColumnColor,
     deleteKanbanColumn,
     createKanbanCard,
     updateKanbanCard,
     moveKanbanCard,
     deleteKanbanCard,
     createKanbanCardFromNote,
+    toggleKanbanCardTag,
   };
 }
 

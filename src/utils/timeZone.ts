@@ -58,9 +58,21 @@ export function zonedDateTimeToUtc(
   second: number,
   timeZone: string
 ): number {
-  let utc = Date.UTC(year, month - 1, day, hour, minute, second);
-  for (let i = 0; i < 2; i++) {
-    utc -= getTimezoneOffsetMs(utc, timeZone);
+  const target = Date.UTC(year, month - 1, day, hour, minute, second);
+  let utc = target;
+  for (let i = 0; i < 3; i++) {
+    const parts = getZonedParts(utc, timeZone);
+    const actual = Date.UTC(
+      parts.year,
+      parts.month - 1,
+      parts.day,
+      parts.hour,
+      parts.minute,
+      parts.second
+    );
+    const diff = target - actual;
+    if (diff === 0) break;
+    utc += diff;
   }
   return utc;
 }

@@ -445,6 +445,10 @@ export const id = {
     linkHint:
       'Tautan ke catatan di daftar Semua Catatan. Isi kartu di bawah tetap terpisah — tidak otomatis disinkronkan dengan catatan terhubung.',
     cardBodyHint: 'Catatan di dalam kartu (langsung di TODO).',
+    closeDetail: 'Tutup detail kartu',
+    columnColor: 'Warna kolom',
+    columnColorPresets: 'Warna preset',
+    columnColorCustom: 'Warna kustom',
   },
   noteAssets: {
     title: 'Aset catatan',

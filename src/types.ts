@@ -55,6 +55,8 @@ export interface KanbanColumn {
   groupId: string;
   name: string;
   order: number;
+  /** Warna aksen kolom (hex, mis. #8b5cf6) */
+  color: string;
 }
 
 /** Kartu kanban — berisi catatan (content) langsung di kartu */
@@ -66,8 +68,11 @@ export interface KanbanCard {
   /** Isi catatan rich-text (HTML), sama seperti Note.content */
   content: string;
   order: number;
+  /** @deprecated Gunakan scheduledAt — digabung saat migrasi */
   dueAt: number | null;
+  /** Jadwal tampil di panel Jadwal (unix ms), null = tanpa jadwal */
   scheduledAt: number | null;
+  tagIds: string[];
   /** Opsional: tautan ke catatan di daftar Semua Catatan */
   linkedNoteId: string | null;
   createdAt: number;

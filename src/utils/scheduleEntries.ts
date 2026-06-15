@@ -29,17 +29,15 @@ export function buildScheduleEntries(
     }
   }
   for (const c of kanbanCards) {
-    const at = c.scheduledAt ?? c.dueAt;
-    if (at) {
-      const linked = c.linkedNoteId ? notes.find((n) => n.id === c.linkedNoteId) : null;
+    if (c.scheduledAt) {
       entries.push({
         kind: 'kanban',
         id: c.id,
         title: c.title.trim() || untitledLabel,
-        at,
+        at: c.scheduledAt,
         noteId: c.linkedNoteId ?? undefined,
         groupId: c.groupId,
-        tagIds: linked?.tagIds,
+        tagIds: c.tagIds,
       });
     }
   }

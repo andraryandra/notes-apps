@@ -447,6 +447,10 @@ export const en: TranslationTree = {
     linkHint:
       'Links to a note in All Notes. Card content below stays separate — not auto-synced with the linked note.',
     cardBodyHint: 'Notes inside the card (directly in TODO).',
+    closeDetail: 'Close card detail',
+    columnColor: 'Column color',
+    columnColorPresets: 'Preset colors',
+    columnColorCustom: 'Custom color',
   },
   noteAssets: {
     title: 'Note assets',

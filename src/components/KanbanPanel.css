@@ -106,19 +106,22 @@
 }
 
 .kanban-column {
+  --col-color: var(--accent);
   flex: 0 0 220px;
+  width: 220px;
   display: flex;
   flex-direction: column;
   max-height: 100%;
   background: var(--bg-surface);
   border: 1px solid var(--border);
+  border-top: 3px solid var(--col-color);
   border-radius: var(--radius-lg);
   transition: box-shadow 0.15s, border-color 0.15s;
 }
 
 .kanban-column--drag-over {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 2px var(--accent-soft);
+  border-color: var(--col-color);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--col-color) 35%, transparent);
 }
 
 .kanban-column-header {
@@ -127,6 +130,7 @@
   gap: 8px;
   padding: 12px;
   border-bottom: 1px solid var(--border);
+  background: color-mix(in srgb, var(--col-color) 10%, var(--bg-surface));
 }
 
 .kanban-column-name {

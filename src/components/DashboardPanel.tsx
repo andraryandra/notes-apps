@@ -123,7 +123,7 @@ export const DashboardPanel = memo(function DashboardPanel({
   const favoritesCount = useMemo(() => notes.filter((n) => n.favorite).length, [notes]);
   const scheduledNotes = useMemo(() => notes.filter((n) => n.scheduledAt).length, [notes]);
   const scheduledCards = useMemo(
-    () => kanbanCards.filter((c) => c.scheduledAt || c.dueAt).length,
+    () => kanbanCards.filter((c) => c.scheduledAt).length,
     [kanbanCards]
   );
   const scheduleTotal = scheduledNotes + scheduledCards;
@@ -134,7 +134,7 @@ export const DashboardPanel = memo(function DashboardPanel({
       if (note.scheduledAt && isToday(note.scheduledAt, dt.timeZone)) n++;
     }
     for (const card of kanbanCards) {
-      const at = card.scheduledAt ?? card.dueAt;
+      const at = card.scheduledAt;
       if (at && isToday(at, dt.timeZone)) n++;
     }
     return n;
