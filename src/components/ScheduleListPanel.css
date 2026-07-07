@@ -201,6 +201,222 @@
   max-width: 220px;
 }
 
+.schedule-list-date-range {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: nowrap;
+  padding: 8px;
+  border: 1px solid color-mix(in srgb, var(--border) 82%, transparent);
+  border-radius: 14px;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--bg-surface) 95%, transparent),
+    color-mix(in srgb, var(--bg-surface) 88%, transparent)
+  );
+  box-shadow: 0 4px 14px color-mix(in srgb, #0ea5e9 7%, transparent);
+}
+
+.schedule-list-date-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  min-width: 340px;
+  transition: background 0.14s, box-shadow 0.14s;
+}
+
+.schedule-list-date-trigger:hover {
+  background: color-mix(in srgb, #0ea5e9 8%, var(--bg-hover));
+}
+
+.schedule-list-date-trigger.is-open {
+  background: color-mix(in srgb, #0ea5e9 10%, var(--bg-hover));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, #0ea5e9 22%, transparent);
+}
+
+.schedule-list-date-range-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.schedule-list-date-range-value {
+  font-size: 12px;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.schedule-list-date-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 8px;
+  z-index: 30;
+  border: 1px solid color-mix(in srgb, var(--border) 78%, transparent);
+  border-radius: 14px;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--bg-surface) 98%, transparent),
+    color-mix(in srgb, var(--bg-surface) 92%, transparent)
+  );
+  box-shadow:
+    0 20px 45px rgba(0, 0, 0, 0.16),
+    0 4px 14px color-mix(in srgb, #0ea5e9 10%, transparent);
+  padding: 10px;
+  backdrop-filter: blur(12px);
+}
+
+.schedule-list-range-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.schedule-list-range-presets button {
+  padding: 6px 9px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 8px;
+  color: var(--text-secondary);
+  background: color-mix(in srgb, var(--bg-base) 84%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
+}
+
+.schedule-list-range-presets button:hover {
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+.schedule-list-calendars {
+  display: flex;
+  gap: 10px;
+}
+
+.schedule-list-calendars .rdp-root {
+  background: color-mix(in srgb, var(--bg-surface) 92%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border) 75%, transparent);
+  border-radius: 10px;
+  padding: 8px;
+}
+
+.rdp-root {
+  --rdp-accent-color: var(--accent);
+  --rdp-accent-background-color: color-mix(in srgb, var(--accent) 16%, transparent);
+  margin: 0;
+}
+
+.schedule-list-date-popover .rdp-caption {
+  height: auto;
+  display: flex;
+  align-items: center;
+}
+
+.schedule-list-date-popover .rdp-caption_label {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0;
+  color: var(--text-primary);
+  text-transform: uppercase;
+}
+
+.schedule-list-date-popover .rdp-nav_button {
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--border) 68%, transparent);
+  background: color-mix(in srgb, var(--bg-base) 78%, transparent);
+  color: var(--accent);
+}
+
+.schedule-list-date-popover .rdp-nav_button:hover {
+  background: color-mix(in srgb, #0ea5e9 11%, transparent);
+  border-color: color-mix(in srgb, #0ea5e9 38%, var(--border));
+}
+
+.schedule-list-date-popover .rdp-weekday {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.schedule-list-date-popover .rdp-day_button {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.schedule-list-date-popover .rdp-day_button:hover {
+  background: color-mix(in srgb, #0ea5e9 12%, transparent);
+}
+
+.schedule-list-date-popover .rdp-range_middle .rdp-day_button {
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  color: var(--text-primary);
+}
+
+.schedule-list-date-popover .rdp-range_start .rdp-day_button,
+.schedule-list-date-popover .rdp-range_end .rdp-day_button,
+.schedule-list-date-popover .rdp-selected .rdp-day_button {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: white;
+  box-shadow: 0 5px 16px color-mix(in srgb, #1d4ed8 38%, transparent);
+}
+
+.schedule-list-date-popover .rdp-today .rdp-day_button:not(.rdp-selected .rdp-day_button) {
+  border: 1px solid color-mix(in srgb, #2563eb 45%, var(--border));
+  color: color-mix(in srgb, #2563eb 88%, var(--text-primary));
+}
+
+.schedule-list-date-filter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--bg-surface);
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.schedule-list-date-filter span {
+  white-space: nowrap;
+}
+
+.schedule-list-date-filter input {
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 12px;
+  min-width: 122px;
+  outline: none;
+}
+
+.schedule-list-date-clear {
+  padding: 8px 11px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  border-radius: 10px;
+  white-space: nowrap;
+  transition: background 0.14s, color 0.14s;
+}
+
+.schedule-list-date-clear:hover {
+  background: color-mix(in srgb, var(--accent) 20%, transparent);
+}
+
 .schedule-list-day-chip {
   display: inline-flex;
   align-items: center;
@@ -429,5 +645,23 @@
 
   .schedule-list-tag-select {
     max-width: none;
+  }
+
+  .schedule-list-date-range {
+    width: 100%;
+  }
+
+  .schedule-list-date-trigger {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .schedule-list-date-popover {
+    left: 0;
+    width: min(100vw - 32px, 700px);
+  }
+
+  .schedule-list-calendars {
+    flex-direction: column;
   }
 }

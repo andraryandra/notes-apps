@@ -20,6 +20,7 @@ import { useI18n } from '../i18n/useI18n';
 import { useConfirm } from '../hooks/useConfirm';
 import { useDateTime } from '../hooks/useDateTime';
 import type { Note, Folder, Tag, KanbanCard } from '../types';
+import { DateRangeFilter } from './DateRangeFilter';
 import './NoteList.css';
 
 interface Props {
@@ -40,6 +41,13 @@ interface Props {
   listTitle: string;
   panelClassName?: string;
   scrollBatchSize?: number;
+  dateRangeFilter?: {
+    startDate: string;
+    endDate: string;
+    onStartDateChange: (value: string) => void;
+    onEndDateChange: (value: string) => void;
+    onReset: () => void;
+  } | null;
 }
 
 type NoteCardProps = {
@@ -177,6 +185,7 @@ const NoteListInner = memo(function NoteListInner({
   onTogglePin,
   listTitle,
   panelClassName,
+  dateRangeFilter,
 }: Props) {
   const { t } = useI18n();
   const { confirm } = useConfirm();
@@ -380,51 +389,67 @@ const NoteListInner = memo(function NoteListInner({
           </>
         ) : (
           <>
-            <h2>{listTitle}</h2>
-            <div className="note-list-header-actions">
-              {sorted.length > 0 && (
-                <button
-                  type="button"
-                  className="note-list-icon-btn"
-                  onClick={() => setSelectMode(true)}
-                  title={t('noteList.selectMultiple')}
-                >
-                  <CheckSquare size={16} />
-                </button>
-              )}
-              <div className="note-create-wrap" ref={createMenuRef}>
-                <button
-                  type="button"
-                  className="note-create-btn"
-                  onClick={() => setCreateMenuOpen((o) => !o)}
-                  title={t('noteList.newNote')}
-                >
-                  <Plus size={18} />
-                  <ChevronDown size={14} />
-                </button>
-                {createMenuOpen && (
-                  <div className="note-create-menu">
+            <div className="note-list-header-main">
+              <div className="note-list-header-top">
+                <h2>{listTitle}</h2>
+                <div className="note-list-header-actions">
+                  {sorted.length > 0 && (
                     <button
                       type="button"
-                      onClick={() => {
-                        onCreate();
-                        setCreateMenuOpen(false);
-                      }}
+                      className="note-list-icon-btn"
+                      onClick={() => setSelectMode(true)}
+                      title={t('noteList.selectMultiple')}
                     >
-                      {t('noteList.newNote')}
+                      <CheckSquare size={16} />
                     </button>
+                  )}
+                  <div className="note-create-wrap" ref={createMenuRef}>
                     <button
                       type="button"
-                      onClick={() => {
-                        onCreateFromTemplate();
-                        setCreateMenuOpen(false);
-                      }}
+                      className="note-create-btn"
+                      onClick={() => setCreateMenuOpen((o) => !o)}
+                      title={t('noteList.newNote')}
                     >
-                      {t('noteList.fromTemplate')}
+                      <Plus size={18} />
+                      <ChevronDown size={14} />
                     </button>
+                    {createMenuOpen && (
+                      <div className="note-create-menu">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            onCreate();
+                            setCreateMenuOpen(false);
+                          }}
+                        >
+                          {t('noteList.newNote')}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            onCreateFromTemplate();
+                            setCreateMenuOpen(false);
+                          }}
+                        >
+                          {t('noteList.fromTemplate')}
+                        </button>
+                      </div>
+                    )}
                   </div>
-                )}
+                </div>
               </div>
+              {dateRangeFilter && (
+                <DateRangeFilter
+                  className="note-list-date-range"
+                  startDate={dateRangeFilter.startDate}
+                  endDate={dateRangeFilter.endDate}
+                  enablePresets
+                  splitCalendars
+                  onStartDateChange={dateRangeFilter.onStartDateChange}
+                  onEndDateChange={dateRangeFilter.onEndDateChange}
+                  onReset={dateRangeFilter.onReset}
+                />
+              )}
             </div>
           </>
         )}

@@ -23,6 +23,7 @@ import {
 import { useI18n } from '../i18n/useI18n';
 import { useDateTime } from '../hooks/useDateTime';
 import { getZonedParts } from '../utils/timeZone';
+import { DateRangeFilter } from './DateRangeFilter';
 import './ScheduleListPanel.css';
 
 export type ScheduleSort = 'desc' | 'asc';
@@ -67,6 +68,8 @@ export function ScheduleListPanel({
   const [sort, setSort] = useState<ScheduleSort>('desc');
   const [typeFilter, setTypeFilter] = useState<ScheduleTypeFilter>('all');
   const [tagFilterId, setTagFilterId] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
   const [contextMenu, setContextMenu] = useState<NoteContextMenuState | null>(null);
 
   const noteById = useMemo(() => new Map(notes.map((n) => [n.id, n])), [notes]);
@@ -87,9 +90,18 @@ export function ScheduleListPanel({
   const filtered = useMemo(() => {
     let list = [...entries];
     const q = query.trim().toLowerCase();
+    const startAt = startDate ? dt.fromDatetimeLocalValue(`${startDate}T00:00`) : null;
+    const endStart = endDate ? dt.fromDatetimeLocalValue(`${endDate}T00:00`) : null;
+    const endAt = endStart != null ? dt.endOfDay(endStart) : null;
 
     if (dayFilter != null) {
       list = list.filter((e) => dt.isSameDay(e.at, dayFilter));
+    }
+    if (startAt != null) {
+      list = list.filter((e) => e.at >= startAt);
+    }
+    if (endAt != null) {
+      list = list.filter((e) => e.at <= endAt);
     }
     if (typeFilter === 'note') list = list.filter((e) => e.kind === 'note');
     if (typeFilter === 'kanban') list = list.filter((e) => e.kind === 'kanban');
@@ -102,7 +114,7 @@ export function ScheduleListPanel({
 
     list.sort((a, b) => (sort === 'desc' ? b.at - a.at : a.at - b.at));
     return list;
-  }, [entries, dayFilter, typeFilter, tagFilterId, query, sort, dt]);
+  }, [entries, dayFilter, startDate, endDate, typeFilter, tagFilterId, query, sort, dt]);
 
   const pagination = usePagePagination(filtered, pageSize);
   const visible = pagination.slice as ScheduleEntry[];
@@ -111,6 +123,21 @@ export function ScheduleListPanel({
     () => entries.filter((e) => e.at >= dt.startOfDay(Date.now())).length,
     [entries, dt]
   );
+
+  const handleStartDateChange = (value: string) => {
+    setStartDate(value);
+    if (value && endDate && endDate < value) {
+      setEndDate(value);
+    }
+  };
+
+  const handleEndDateChange = (value: string) => {
+    if (startDate && value && value < startDate) {
+      setEndDate(startDate);
+      return;
+    }
+    setEndDate(value);
+  };
 
   return (
     <div className="schedule-list-panel">
@@ -192,6 +219,19 @@ export function ScheduleListPanel({
             placeholder={t('schedule.filterTag')}
             searchPlaceholder={t('schedule.searchTag')}
           />
+          <DateRangeFilter
+            className="schedule-list-date-range"
+            startDate={startDate}
+            endDate={endDate}
+            enablePresets
+            splitCalendars
+            onStartDateChange={handleStartDateChange}
+            onEndDateChange={handleEndDateChange}
+            onReset={() => {
+              setStartDate('');
+              setEndDate('');
+            }}
+          />
         </div>
 
         {dayFilter != null && (
@@ -210,7 +250,7 @@ export function ScheduleListPanel({
           <div className="schedule-list-empty">
             <Calendar size={40} strokeWidth={1.2} />
             <p>{t('schedule.empty')}</p>
-            {(query || tagFilterId || typeFilter !== 'all' || dayFilter != null) && (
+            {(query || tagFilterId || typeFilter !== 'all' || dayFilter != null || startDate || endDate) && (
               <button
                 type="button"
                 className="schedule-list-reset-btn"
@@ -218,6 +258,8 @@ export function ScheduleListPanel({
                   setQuery('');
                   setTagFilterId('');
                   setTypeFilter('all');
+                  setStartDate('');
+                  setEndDate('');
                   onClearDayFilter();
                 }}
               >

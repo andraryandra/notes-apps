@@ -26,4 +26,5 @@ export interface SidebarProps {
   onSelectKanbanCard?: (cardId: string, groupId: string) => void;
   onCreateKanbanGroup?: () => void;
   onDeleteKanbanGroup?: (groupId: string) => void;
+  onDeleteKanbanCard?: (cardId: string) => void;
 }

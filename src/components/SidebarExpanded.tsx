@@ -38,6 +38,7 @@ export function SidebarExpanded({
   onSelectKanbanCard,
   onCreateKanbanGroup,
   onDeleteKanbanGroup,
+  onDeleteKanbanCard,
   onCollapse,
 }: Props) {
   const { t } = useI18n();
@@ -134,6 +135,7 @@ export function SidebarExpanded({
             onSelectCard={onSelectKanbanCard}
             onCreateGroup={onCreateKanbanGroup}
             onDeleteGroup={onDeleteKanbanGroup}
+            onDeleteCard={onDeleteKanbanCard}
           />
         )}
 

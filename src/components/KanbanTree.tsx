@@ -14,6 +14,7 @@ interface Props {
   onSelectCard: (cardId: string, groupId: string) => void;
   onCreateGroup: () => void;
   onDeleteGroup: (groupId: string) => void;
+  onDeleteCard?: (cardId: string) => void;
 }
 
 export function KanbanTree({
@@ -25,6 +26,7 @@ export function KanbanTree({
   onSelectCard,
   onCreateGroup,
   onDeleteGroup,
+  onDeleteCard,
 }: Props) {
   const { t } = useI18n();
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
@@ -94,14 +96,27 @@ export function KanbanTree({
                     ) : (
                       groupCards.map((card) => (
                         <li key={card.id}>
-                          <button
-                            type="button"
-                            className={`kanban-tree-card-btn ${selectedCardId === card.id ? 'active' : ''}`}
-                            onClick={() => onSelectCard(card.id, group.id)}
-                          >
-                            <FileText size={13} />
-                            <span>{card.title.trim() || t('noteList.untitled')}</span>
-                          </button>
+                          <div className="kanban-tree-card-row">
+                            <button
+                              type="button"
+                              className={`kanban-tree-card-btn ${selectedCardId === card.id ? 'active' : ''}`}
+                              onClick={() => onSelectCard(card.id, group.id)}
+                            >
+                              <FileText size={13} />
+                              <span>{card.title.trim() || t('noteList.untitled')}</span>
+                            </button>
+                            {onDeleteCard && (
+                              <button
+                                type="button"
+                                className="kanban-tree-card-delete"
+                                onClick={() => onDeleteCard(card.id)}
+                                title={t('common.delete')}
+                                aria-label={t('common.delete')}
+                              >
+                                <Trash2 size={12} />
+                              </button>
+                            )}
+                          </div>
                         </li>
                       ))
                     )}

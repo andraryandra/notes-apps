@@ -5,8 +5,10 @@
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
-  contain: layout paint;
+  contain: layout;
   isolation: isolate;
+  position: relative;
+  overflow: visible;
 }
 
 .note-list-header {
@@ -94,6 +96,29 @@
   font-size: 15px;
   font-weight: 600;
   color: var(--text-primary);
+}
+
+.note-list-header-main {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.note-list-header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.note-list-date-range {
+  width: 100%;
+}
+
+.note-list-date-range .date-range-filter-trigger {
+  min-width: 0;
+  width: 100%;
 }
 
 .note-create-wrap {

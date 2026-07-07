@@ -277,12 +277,18 @@
 }
 
 .kanban-card-delete {
-  padding: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
   color: var(--text-muted);
-  opacity: 0;
+  background: color-mix(in srgb, var(--bg-hover) 82%, transparent);
+  border-radius: 6px;
+  opacity: 0.7;
   cursor: pointer;
   flex-shrink: 0;
-}
 }
 
 .kanban-card:hover .kanban-card-delete,
@@ -292,6 +298,7 @@
 
 .kanban-card-delete:hover {
   color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 12%, transparent);
 }
 
 .kanban-column-footer {

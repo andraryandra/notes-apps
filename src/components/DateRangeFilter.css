@@ -1,0 +1,110 @@
+.date-range-filter {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px;
+  border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--bg-surface) 94%, transparent);
+}
+
+.date-range-filter-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  min-width: 300px;
+}
+
+.date-range-filter-trigger:hover,
+.date-range-filter-trigger.is-open {
+  background: color-mix(in srgb, #0ea5e9 10%, var(--bg-hover));
+}
+
+.date-range-filter-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.date-range-filter-value {
+  font-size: 12px;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.date-range-filter-reset {
+  padding: 7px 9px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  white-space: nowrap;
+}
+
+.date-range-filter-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 6px;
+  z-index: 40;
+  border: 1px solid color-mix(in srgb, var(--border) 75%, transparent);
+  border-radius: 12px;
+  background: var(--bg-surface);
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.16);
+  padding: 10px;
+}
+
+.date-range-filter-presets {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 6px;
+  margin-bottom: 10px;
+  overflow-x: auto;
+}
+
+.date-range-filter-presets button {
+  padding: 6px 9px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 8px;
+  color: var(--text-secondary);
+  background: color-mix(in srgb, var(--bg-base) 84%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
+}
+
+.date-range-filter-presets button:hover {
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+.date-range-filter-popover .rdp-root {
+  --rdp-accent-color: var(--accent);
+  --rdp-accent-background-color: color-mix(in srgb, var(--accent) 14%, transparent);
+  margin: 0;
+}
+
+.date-range-filter-calendars {
+  display: flex;
+  gap: 10px;
+  flex-wrap: nowrap;
+}
+
+.date-range-filter-calendars .rdp-root {
+  background: color-mix(in srgb, var(--bg-surface) 94%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border) 74%, transparent);
+  border-radius: 10px;
+  padding: 8px;
+}
+
+.date-range-filter-popover .rdp-day_button {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  font-size: 13px;
+}

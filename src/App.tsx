@@ -164,6 +164,8 @@ function AppContent({
   const [showSettings, setShowSettings] = useState(false);
   const [templatePickerOpen, setTemplatePickerOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [noteStartDate, setNoteStartDate] = useState('');
+  const [noteEndDate, setNoteEndDate] = useState('');
   const [sidebarView, setSidebarView] = useState<SidebarView>('all');
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
   const [selectedTagId, setSelectedTagId] = useState<string | null>(null);
@@ -258,8 +260,27 @@ function AppContent({
       }
     }
 
+    const useDateFilter = sidebarView === 'all' || sidebarView === 'favorites';
+    if (useDateFilter) {
+      const startAt = noteStartDate ? dt.fromDatetimeLocalValue(`${noteStartDate}T00:00`) : null;
+      const endStart = noteEndDate ? dt.fromDatetimeLocalValue(`${noteEndDate}T00:00`) : null;
+      const endAt = endStart != null ? dt.endOfDay(endStart) : null;
+      if (startAt != null) notes = notes.filter((n) => n.updatedAt >= startAt);
+      if (endAt != null) notes = notes.filter((n) => n.updatedAt <= endAt);
+    }
+
     return notes;
-  }, [activeNotes, data.folders, searchQuery, sidebarView, selectedFolderId, selectedTagId]);
+  }, [
+    activeNotes,
+    data.folders,
+    searchQuery,
+    sidebarView,
+    selectedFolderId,
+    selectedTagId,
+    noteStartDate,
+    noteEndDate,
+    dt,
+  ]);
 
   const listTitle = useMemo(() => {
     if (searchQuery.trim()) return t('app.listTitle.search', { query: searchQuery });
@@ -711,6 +732,23 @@ function AppContent({
     [store, selectedKanbanGroupId, data.kanbanGroups]
   );
 
+  const handleDeleteKanbanCard = useCallback(
+    async (id: string) => {
+      const card = data.kanbanCards.find((c) => c.id === id);
+      const title = card?.title?.trim() || t('noteList.untitled');
+      const ok = await confirm({
+        title: t('kanban.deleteCardTitle'),
+        message: t('kanban.deleteCardConfirm', { title }),
+        confirmLabel: t('common.delete'),
+        variant: 'danger',
+      });
+      if (!ok) return;
+      store.deleteKanbanCard(id);
+      if (selectedKanbanCardId === id) setSelectedKanbanCardId(null);
+    },
+    [data.kanbanCards, store, selectedKanbanCardId, confirm, t]
+  );
+
   if (!ready || !loaded) {
     return (
       <div className="app-loading">
@@ -776,6 +814,7 @@ function AppContent({
           onSelectKanbanCard={(cardId, groupId) => openKanbanCard(cardId, groupId)}
           onCreateKanbanGroup={() => setModal({ type: 'kanbanGroup' })}
           onDeleteKanbanGroup={handleDeleteKanbanGroup}
+          onDeleteKanbanCard={handleDeleteKanbanCard}
         />
         {sidebarView === 'dashboard' && (
           <ViewTransition viewKey="dashboard">
@@ -840,10 +879,7 @@ function AppContent({
                 }}
                 onMoveCard={store.moveKanbanCard}
                 onMoveColumn={store.moveKanbanColumn}
-                onDeleteCard={(id) => {
-                  store.deleteKanbanCard(id);
-                  if (selectedKanbanCardId === id) setSelectedKanbanCardId(null);
-                }}
+                onDeleteCard={handleDeleteKanbanCard}
                 onRenameGroup={(name) => {
                   if (selectedKanbanGroupId) store.renameKanbanGroup(selectedKanbanGroupId, name);
                 }}
@@ -950,6 +986,29 @@ function AppContent({
             onToggleFavorite={handleToggleFavorite}
             onTogglePin={handleTogglePin}
             listTitle={listTitle}
+            dateRangeFilter={
+              sidebarView === 'all' || sidebarView === 'favorites'
+                ? {
+                    startDate: noteStartDate,
+                    endDate: noteEndDate,
+                    onStartDateChange: (value) => {
+                      setNoteStartDate(value);
+                      if (value && noteEndDate && noteEndDate < value) setNoteEndDate(value);
+                    },
+                    onEndDateChange: (value) => {
+                      if (noteStartDate && value && value < noteStartDate) {
+                        setNoteEndDate(noteStartDate);
+                        return;
+                      }
+                      setNoteEndDate(value);
+                    },
+                    onReset: () => {
+                      setNoteStartDate('');
+                      setNoteEndDate('');
+                    },
+                  }
+                : null
+            }
             scrollBatchSize={scrollBatchSize}
             panelClassName={isFocusLayout && noteListDrawerOpen ? 'note-list-drawer' : undefined}
           />

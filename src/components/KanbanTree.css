@@ -121,8 +121,14 @@
   padding: 6px 8px;
 }
 
+.kanban-tree-card-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .kanban-tree-card-btn {
-  width: 100%;
+  flex: 1;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -148,4 +154,20 @@
   background: var(--accent-soft);
   color: var(--accent);
   font-weight: 600;
+}
+
+.kanban-tree-card-delete {
+  padding: 4px;
+  color: var(--text-muted);
+  border-radius: var(--radius-sm);
+  opacity: 0;
+}
+
+.kanban-tree-card-row:hover .kanban-tree-card-delete {
+  opacity: 1;
+}
+
+.kanban-tree-card-delete:hover {
+  color: var(--danger);
+  background: var(--danger-soft, var(--bg-hover));
 }

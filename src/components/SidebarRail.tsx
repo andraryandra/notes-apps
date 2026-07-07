@@ -57,6 +57,7 @@ export function SidebarRail(props: Props) {
     onSelectKanbanCard,
     onCreateKanbanGroup,
     onDeleteKanbanGroup,
+    onDeleteKanbanCard,
     onExpand,
   } = props;
 
@@ -270,6 +271,7 @@ export function SidebarRail(props: Props) {
                 onSelectCard={onSelectKanbanCard}
                 onCreateGroup={onCreateKanbanGroup}
                 onDeleteGroup={onDeleteKanbanGroup}
+                onDeleteCard={onDeleteKanbanCard}
               />
             </>
           )}

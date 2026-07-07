@@ -62,6 +62,25 @@
   border-color: var(--border-focus);
 }
 
+.global-assets-date-range {
+  padding: 0 12px 10px;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
+}
+
+.global-assets-date-filter {
+  width: 100%;
+}
+
+.global-assets-date-filter .date-range-filter-trigger {
+  min-width: 0;
+  width: 100%;
+}
+
+.global-assets-date-filter .date-range-filter-popover {
+  left: auto;
+  right: 0;
+}
+
 .note-assets-filter-row {
   display: flex;
   align-items: center;
